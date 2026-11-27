@@ -2939,11 +2939,38 @@ renderEau();
   }
   navigator.serviceWorker.register("sw.js").catch(() => dire("Impossible de préparer les notifications."));
 
+  const CLE_PUBLIQUE = "BFRzOeJgA-CDzyY49yrQAGmS8gf9Vpe9plxP-Z5k75HlgmwoKnzJkWy-m6iMf5NGRYYytTzzejCc8BxbecTIsAo";
+  function versUint8(texte) {
+    const bl = "=".repeat((4 - (texte.length % 4)) % 4);
+    const b64 = (texte + bl).replace(/-/g, "+").replace(/_/g, "/");
+    const brut = atob(b64);
+    return Uint8Array.from(brut, c => c.charCodeAt(0));
+  }
+  async function enregistrerTelephone() {
+    try {
+      if (!window.sbClient) { dire("Connecte-toi d'abord à ton compte."); return; }
+      const reg = await navigator.serviceWorker.ready;
+      let abo = await reg.pushManager.getSubscription();
+      if (!abo) {
+        abo = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: versUint8(CLE_PUBLIQUE) });
+      }
+      const j = abo.toJSON();
+      const { error } = await window.sbClient.from("abonnements").upsert({
+        endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth
+      });
+      if (error) throw error;
+      dire("Notifications autorisées. Ton téléphone est enregistré pour les rappels.");
+    } catch (e) {
+      dire("Impossible d'enregistrer ce téléphone pour les rappels.");
+    }
+  }
+
   window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("rappels-activer").addEventListener("click", async () => {
       try {
         const reponse = await Notification.requestPermission();
-        dire(reponse === "granted" ? "Notifications autorisées." : "Notifications refusées : tu peux les autoriser dans les réglages de l'iPhone.");
+        if (reponse !== "granted") { dire("Notifications refusées : tu peux les autoriser dans les réglages de l'iPhone."); return; }
+        await enregistrerTelephone();
       } catch (e) { dire("Impossible de demander l'autorisation ici."); }
     });
     document.getElementById("rappels-tester").addEventListener("click", async () => {
