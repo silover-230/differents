@@ -323,7 +323,12 @@
     deco.style.cssText = "font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid #999;background:#fff;color:#333;text-align:left";
     deco.addEventListener("click", async () => { await client.auth.signOut(); location.reload(); });
 
-    panneau.append(statut, deco);
+    const recharger = document.createElement("button");
+    recharger.textContent = "Recharger la page";
+    recharger.style.cssText = "font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid #999;background:#fff;color:#333;text-align:left";
+    recharger.addEventListener("click", () => { location.reload(); });
+
+    panneau.append(statut, recharger, deco);
     trois.addEventListener("click", () => { panneau.hidden = !panneau.hidden; });
     document.addEventListener("click", (ev) => { if (!menu.contains(ev.target)) panneau.hidden = true; });
 
