@@ -2279,7 +2279,6 @@ function afficherEtapeVessie() {
 }
 
 /* Prévision simple : médiane des intervalles entre passages (calcul, pas d'IA) */
-const JOURS_AVANT_PREVISION = 30;
 const PASSAGES_MIN_PREVISION = 20;
 function renderPrevisionVessie() {
   const el = document.getElementById("vessie-prevision");
@@ -2293,11 +2292,6 @@ function renderPrevisionVessie() {
   const l = loadKey(KEY_VESSIE).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
   if (l.length < PASSAGES_MIN_PREVISION) {
     p.textContent = "Pas encore de prévision : il faut au moins " + PASSAGES_MIN_PREVISION + " passages notés (il en manque " + (PASSAGES_MIN_PREVISION - l.length) + ").";
-    return;
-  }
-  const jours = (Date.now() - new Date(l[0].date)) / 86400000;
-  if (jours < JOURS_AVANT_PREVISION) {
-    p.textContent = "Encore " + Math.ceil(JOURS_AVANT_PREVISION - jours) + " jour(s) de données avant la première prévision.";
     return;
   }
   const recents = l.slice(-30);
