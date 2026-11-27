@@ -1,0 +1,2710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Differents</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#C936AE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Differents">
+<style>
+  :root{
+    --lavender:#FFEAFC; --periwinkle:#9D96FF; --sun:#FAC75A; --orchid:#C936AE; --lime:#BEDA62;
+    --ink:#3a1538;
+    --ease-out:cubic-bezier(.2,.8,.2,1);
+    --ease-spring:cubic-bezier(.2,1.35,.4,1);
+  }
+  [hidden]{display:none !important}
+  *{box-sizing:border-box}
+  body{
+    font-family:system-ui,-apple-system,sans-serif;color:var(--ink);margin:0;padding:16px 16px 120px;line-height:1.45;min-height:100vh;
+    background-color:var(--lavender);
+    background-image:
+      radial-gradient(60% 40% at 15% 0%, rgba(190,218,98,.6), transparent 70%),
+      radial-gradient(50% 40% at 90% 30%, rgba(157,150,255,.55), transparent 70%),
+      radial-gradient(55% 45% at 50% 100%, rgba(250,199,90,.5), transparent 70%);
+    background-attachment:fixed;
+  }
+  main{max-width:520px;margin:0 auto}
+  h1{font-size:1.5rem;margin:8px 0 2px}
+  h2{font-size:1.05rem;margin:0 0 8px}
+  .muted{color:#5a2a55;font-size:.9rem}
+  .panel{border-radius:18px;padding:14px;margin-top:12px;border:1px solid rgba(255,255,255,.6);transition:box-shadow .35s var(--ease-out)}
+  .p-sun{background:var(--sun)}
+  .p-peri{background:var(--periwinkle)}
+  .p-lime{background:var(--lime)}
+  .p-lav{background:rgba(255,255,255,.6)}
+  .opts{display:flex;flex-wrap:wrap;gap:8px}
+  button{
+    font:inherit;color:var(--ink);padding:10px 14px;border-radius:12px;border:2px solid var(--orchid);background:rgba(255,255,255,.7);cursor:pointer;min-height:44px;
+    transition:transform .18s var(--ease-out), background-color .3s ease, color .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  button:active{transform:scale(.95)}
+  button[aria-pressed="true"]{background:var(--orchid);color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(201,54,174,.25)}
+  button:disabled{opacity:.6;cursor:default}
+  button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .chip{display:inline-flex;gap:6px;align-items:center;padding:8px 10px;border:1px solid rgba(58,21,56,.35);border-radius:10px;background:rgba(255,255,255,.7);margin:4px;transition:background-color .3s ease}
+  input[type=text],input[type=time],input[type=number]{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(58,21,56,.35);margin-top:6px;margin-bottom:10px;font:inherit;background:rgba(255,255,255,.8);color:var(--ink);transition:border-color .3s ease, box-shadow .3s ease}
+  input:focus{box-shadow:0 0 0 3px rgba(201,54,174,.2)}
+  label{display:block}
+  .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .row input{margin:0;flex:1}
+  .row button{min-height:40px;padding:8px 12px}
+  .primary{background:var(--orchid);color:#fff;font-weight:600;border-color:var(--orchid)}
+  .card-out{background:rgba(255,255,255,.75);border-radius:14px;padding:14px;margin-top:10px;white-space:pre-wrap}
+  .hist li{margin-bottom:6px}
+
+  /* Entrée des écrans */
+  section[data-section]:not([hidden]),
+  .vue:not([hidden]){animation:fadeUp .45s var(--ease-out) both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes popIn{from{opacity:0;transform:scale(.9) translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes bump{0%{transform:scale(.6)}55%{transform:scale(1.12)}100%{transform:scale(1)}}
+  @keyframes flotter{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+  /* Barre du bas */
+  .dock{
+    position:fixed;left:50%;bottom:12px;transform:translateX(-50%);
+    width:min(520px, calc(100% - 24px));
+    display:flex;gap:4px;padding:6px;border-radius:20px;
+    background:rgba(255,255,255,.5);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.8);
+    box-shadow:0 8px 24px rgba(58,21,56,.12);
+  }
+  .tab{
+    flex:1;background:transparent;border:2px solid transparent;border-radius:14px;
+    padding:8px 2px;font-size:.78rem;color:var(--ink);min-height:56px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    transition:background-color .4s var(--ease-out), border-color .4s var(--ease-out), transform .18s var(--ease-out);
+  }
+  .tab .ico{font-size:1.1rem;line-height:1}
+  .tab[aria-pressed="true"]{
+    background:rgba(201,54,174,.22);border-color:rgba(201,54,174,.55);color:var(--ink);font-weight:600;
+  }
+
+  /* Routines */
+  .rv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px}
+  .fab{
+    width:52px;height:52px;min-height:52px;padding:0;border-radius:50%;background:var(--orchid);color:#fff;
+    border:none;font-size:2rem;line-height:1;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 16px rgba(201,54,174,.35);
+  }
+  .fab:hover{box-shadow:0 10px 22px rgba(201,54,174,.45)}
+  .fab.tourne{transform:rotate(90deg)}
+  .routine-card{
+    width:100%;display:flex;align-items:center;gap:14px;text-align:left;
+    padding:16px;margin-top:10px;border-radius:18px;border:2px solid rgba(255,255,255,.7);
+    font-size:1rem;font-weight:600;
+    animation:popIn .4s var(--ease-out) both;
+  }
+  .routine-card:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(58,21,56,.12)}
+  .routine-card .sq{
+    width:48px;height:48px;min-width:48px;border-radius:14px;background:rgba(255,255,255,.8);
+    display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+  }
+  .routine-card .sous{font-weight:400;font-size:.85rem;color:#5a2a55}
+  .emoji-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:10px}
+  .emoji-grid button{min-height:40px;padding:4px 0;font-size:1.3rem;border-radius:10px;background:rgba(255,255,255,.8)}
+  .emoji-grid button[aria-pressed="true"]{background:var(--orchid);border-color:var(--orchid)}
+  .step-row{
+    display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px;border-radius:14px;background:rgba(255,255,255,.7);
+    animation:popIn .35s var(--ease-out) both;
+  }
+  .step-row .sq{width:40px;height:40px;min-width:40px;border-radius:12px;background:var(--lavender);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+  .step-row .nom{flex:1}
+  .step-row .num{font-weight:700;min-width:1.4em;text-align:center;color:#5a2a55}
+  .step-row button{min-height:36px;padding:6px 9px}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .run-card{background:var(--periwinkle);border-radius:22px;padding:18px;margin-top:12px;text-align:center}
+  .run-emoji{
+    width:150px;height:150px;margin:8px auto 12px;border-radius:26px;background:rgba(255,255,255,.85);
+    display:flex;align-items:center;justify-content:center;font-size:4.5rem;
+    cursor:pointer;transition:transform .2s var(--ease-out), box-shadow .3s ease;-webkit-tap-highlight-color:transparent;user-select:none;
+  }
+  .run-emoji:hover{box-shadow:0 8px 20px rgba(58,21,56,.18)}
+  .run-emoji:active{transform:scale(.92)}
+  .run-emoji.bump{animation:bump .5s var(--ease-spring)}
+  .timer{font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums;margin:6px 0 10px}
+  .progress{height:8px;border-radius:99px;background:rgba(255,255,255,.6);overflow:hidden;margin:6px 0 4px}
+  .progress span{display:block;height:100%;width:0;background:var(--orchid);border-radius:99px;transition:width .6s var(--ease-out)}
+  .bubble-overlay{
+    position:fixed;inset:0;background:rgba(58,21,56,.28);display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:10;opacity:0;transition:opacity .3s ease;
+  }
+  .bubble-overlay.open{opacity:1}
+  .bubble{
+    width:min(360px,100%);background:var(--lavender);border-radius:26px;padding:20px;
+    border:3px solid var(--orchid);box-shadow:0 14px 40px rgba(58,21,56,.25);
+    transform:scale(.5) translateY(30px);opacity:0;
+    transition:transform .45s var(--ease-spring), opacity .3s ease;
+  }
+  .bubble-overlay.open .bubble{transform:scale(1) translateY(0);opacity:1}
+
+  /* Nuage d'encouragement */
+  .nuage{
+    position:relative;isolation:isolate;width:min(320px,92%);min-height:110px;margin:58px auto 30px;padding:30px 34px;
+    background:#fff;border-radius:50px;display:flex;align-items:center;justify-content:center;
+    text-align:center;font-weight:600;color:var(--ink);
+    filter:drop-shadow(0 10px 12px rgba(157,150,255,.4));
+    animation:flotter 3.4s ease-in-out infinite;
+  }
+  .nuage::before{display:none}
+  .nuage i{position:absolute;display:block;background:#fff;border-radius:50%;z-index:-1}
+  .nuage .b1{left:20%;width:44%;top:-40%;height:90%}
+  .nuage .b2{left:4%;width:34%;top:-16%;height:58%}
+  .nuage .b3{right:4%;width:36%;top:-18%;height:62%}
+  .nuage .txt{position:relative;z-index:1;line-height:1.4}
+
+  /* Bannière de rappel */
+  .rappel-banner{
+    position:fixed;top:12px;left:50%;transform:translate(-50%,-160%);z-index:20;
+    width:min(480px,calc(100% - 24px));background:#fff;border:2px solid var(--orchid);border-radius:20px;
+    padding:12px 14px;box-shadow:0 10px 24px rgba(58,21,56,.2);display:flex;flex-direction:column;gap:8px;
+    transition:transform .5s var(--ease-spring);
+  }
+  .rappel-banner.montre{transform:translate(-50%,0)}
+  .rb-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* Animation des questions */
+  .q-enter{animation:qIn .45s var(--ease-out) both}
+  @keyframes qIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+
+  /* Corps */
+  #corps-svg{touch-action:none;user-select:none;-webkit-user-select:none}
+
+  /* Site : les aides IA sont masquées (elles ne fonctionnent que dans Claude) */
+  .panel:has(#demeler){display:none !important}
+  h1.titre-app{
+    margin:10px 0 6px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1 class="titre-app"><img src="images/titre.png" alt="Differents" style="display:block;height:44px;width:auto;margin:6px 0"></h1>
+  <p class="muted">Tes données restent dans ce navigateur.</p>
+
+  <section data-section="emotions">
+    <div class="panel p-sun">
+      <h2>1. Comment tu te sens ?</h2>
+      <div class="opts" id="ressenti" role="group" aria-label="Ressenti"></div>
+      <div class="opts" id="mots" role="group" aria-label="Mot qui colle" style="margin-top:8px"></div>
+    </div>
+
+    <div class="panel p-peri">
+      <h2>2. Batterie sociale</h2>
+      <div class="opts" id="batterie" role="group" aria-label="Batterie sociale"></div>
+    </div>
+
+    <div class="panel p-lime">
+      <h2>3. Pourquoi ?</h2>
+      <div id="raisons"></div>
+      <input type="text" id="autre" placeholder="Autre (facultatif)">
+    </div>
+
+    <p style="margin-top:14px">
+      <button class="primary" id="save" type="button">Enregistrer</button>
+      <span class="muted" id="msg"></span>
+    </p>
+
+    <div class="panel p-lav">
+      <h2>Démêler avec Claude</h2>
+      <p class="muted">Claude pose une question à la fois, sans jugement, et ne fait aucun diagnostic. Il ne garde rien d'un appel à l'autre : ce qui compte est enregistré ici.</p>
+      <button id="demeler" type="button">Aide-moi à démêler</button>
+      <div class="card-out" id="out" hidden></div>
+    </div>
+
+    <div class="panel p-lav">
+      <h2>Historique</h2>
+      <ul class="hist muted" id="hist"></ul>
+    </div>
+  </section>
+
+  <section data-section="sommeil" hidden>
+    <div class="panel p-peri" id="carte-sommeil"></div>
+    <div class="panel p-lav">
+      <h2>Historique des nuits</h2>
+      <ul class="hist muted" id="hist-sleep-n"></ul>
+    </div>
+  </section>
+
+  <section data-section="sommeil-ancien" hidden>
+    <div class="panel p-peri">
+      <h2>Ta nuit</h2>
+      <label>Couché·e à
+        <input type="time" id="coucher">
+      </label>
+      <label>Réveillé·e à
+        <input type="time" id="lever">
+      </label>
+      <p class="muted" id="duree">Entre les deux heures pour voir la durée.</p>
+    </div>
+
+    <div class="panel p-sun">
+      <h2>Endormissement et réveils</h2>
+      <label>Temps pour m'endormir (en minutes)
+        <input type="number" id="latence" min="0" max="600" step="5" placeholder="ex. 20">
+      </label>
+      <p class="muted" style="margin:6px 0">Réveils pendant la nuit : l'heure, et combien de temps tu es resté·e éveillé·e</p>
+      <div id="reveils-list"></div>
+      <button type="button" id="add-reveil">+ Ajouter un réveil</button>
+    </div>
+
+    <div class="panel p-lime">
+      <h2>As-tu bien récupéré ?</h2>
+      <div class="opts" id="recup" role="group" aria-label="Récupération"></div>
+      <p class="muted" style="margin:10px 0 4px">Comment tu te sens au réveil ?</p>
+      <div id="sensations"></div>
+    </div>
+
+    <p style="margin-top:14px">
+      <button class="primary" id="save-sleep" type="button">Enregistrer la nuit</button>
+      <span class="muted" id="msg-sleep"></span>
+    </p>
+
+    <div class="panel p-lav">
+      <h2>Historique des nuits</h2>
+      <ul class="hist muted" id="hist-sleep"></ul>
+    </div>
+  </section>
+
+  <section data-section="todo" hidden>
+    <div class="opts" id="t2-categories" role="group" aria-label="Catégorie" style="margin-bottom:8px"></div>
+    <div class="panel p-lime">
+      <h2 id="t2-titre"></h2>
+      <p class="muted" id="t2-aide"></p>
+      <div class="row">
+        <input type="text" id="t2-nouveau" placeholder="Ajouter une chose">
+        <button type="button" id="t2-ajouter">Ajouter</button>
+      </div>
+      <ul id="t2-liste" style="list-style:none;padding:0;margin:0"></ul>
+    </div>
+  </section>
+
+  <section data-section="todo-ancien" hidden>
+    <div class="panel p-lime">
+      <h2>À faire</h2>
+      <p class="muted">Pour te souvenir de petites choses. Pas d'horaire, et ce n'est pas compté dans le bilan.</p>
+      <div class="row">
+        <input type="text" id="todo-nouveau" placeholder="Ajouter une chose à faire">
+        <button type="button" id="todo-ajouter">Ajouter</button>
+      </div>
+      <ul id="todo-liste" style="list-style:none;padding:0;margin:0"></ul>
+    </div>
+  </section>
+
+  <section data-section="routines" hidden>
+    <div class="vue" id="rv-liste">
+      <div class="rv-head">
+        <h2>Mes routines</h2>
+        <button type="button" class="fab" id="ouvrir-bulle" aria-label="Ajouter une routine">+</button>
+      </div>
+      <div id="routines-liste"></div>
+      <p><button type="button" id="ouvrir-historique">Voir l'historique des routines</button></p>
+    </div>
+
+    <div class="vue" id="rv-edit" hidden>
+      <div class="rv-head">
+        <button type="button" id="retour-edit">← Routines</button>
+        <h2 id="edit-titre" style="margin:0;text-align:right"></h2>
+      </div>
+
+      <div class="panel p-sun">
+        <h2>Ajouter une étape</h2>
+        <p class="muted" style="margin:0 0 6px">Choisis un emoji</p>
+        <div class="emoji-grid" id="emoji-choix" role="group" aria-label="Emoji de l'étape"></div>
+        <div class="row">
+          <input type="text" id="nouvelle-etape" placeholder="Nom de l'étape (ex. Prendre une douche)">
+          <button type="button" id="ajouter-etape">Ajouter</button>
+        </div>
+      </div>
+
+      <div class="panel p-peri" id="rappel-panel">
+        <h2>Rappels</h2>
+        <label>Premier rappel à
+          <input type="time" id="rappel-heure">
+        </label>
+        <label>Dernier rappel, au plus tard, à
+          <input type="time" id="rappel-fin">
+        </label>
+        <p>
+          <button type="button" id="rappel-enregistrer">Enregistrer le rappel</button>
+          <button type="button" id="rappel-retirer">Retirer</button>
+          <span class="muted" id="msg-rappel"></span>
+        </p>
+        <p><button type="button" id="gcal-ajouter">Ajouter à mon calendrier Apple</button></p>
+      </div>
+
+      <div id="etapes-liste"></div>
+
+      <div class="actions">
+        <button type="button" class="primary" id="conclure">Conclure la routine</button>
+        <button type="button" id="supprimer-routine">Supprimer la routine</button>
+      </div>
+      <p class="muted" id="msg-edit" style="margin-top:8px"></p>
+    </div>
+
+    <div class="vue" id="rv-vue" hidden>
+      <div class="rv-head">
+        <button type="button" id="retour-vue">← Routines</button>
+        <h2 id="vue-titre" style="margin:0;text-align:right"></h2>
+      </div>
+      <p class="muted" id="vue-rappel"></p>
+      <div id="vue-etapes"></div>
+      <div class="actions">
+        <button type="button" class="primary" id="demarrer">Démarrer la routine</button>
+        <button type="button" id="modifier">Modifier les étapes</button>
+        <button type="button" id="supprimer-routine-vue">Supprimer la routine</button>
+      </div>
+    </div>
+
+    <div class="vue" id="rv-run" hidden>
+      <div class="nuage" id="nuage" hidden><i class="b1"></i><i class="b2"></i><i class="b3"></i><span class="txt"></span></div>
+      <div class="run-card">
+        <p class="muted" id="run-progres"></p>
+        <div class="progress"><span id="run-barre"></span></div>
+        <div class="run-emoji" id="run-emoji" role="button" tabindex="0" aria-label="Toucher pour valider l'étape"></div>
+        <p class="muted" style="margin:0 0 6px">Touche l'emoji pour valider l'étape</p>
+        <h2 id="run-etape"></h2>
+        <p class="timer" id="run-chrono">0:00</p>
+        <p>
+          <button type="button" class="primary" id="run-faite">Étape faite</button>
+          <button type="button" id="run-passer">Passer</button>
+          <button type="button" id="run-arreter">Arrêter</button>
+        </p>
+      </div>
+      <div class="panel p-lime" id="run-resume" hidden>
+        <h2>Résumé</h2>
+        <div id="run-resume-liste"></div>
+      </div>
+      <p><button type="button" id="run-retour">← Retour aux routines</button></p>
+    </div>
+
+    <div class="vue" id="rv-historique" hidden>
+      <div class="rv-head">
+        <button type="button" id="retour-historique">← Routines</button>
+        <h2 style="margin:0;text-align:right">Historique</h2>
+      </div>
+      <div id="historique-liste"></div>
+    </div>
+
+    <div class="bubble-overlay" id="bulle" hidden>
+      <div class="bubble" role="dialog" aria-modal="true" aria-label="Nouvelle routine">
+        <h2>Nouvelle routine</h2>
+        <input type="text" id="nouvelle-routine" placeholder="Nom (ex. Routine du matin)">
+        <p>
+          <button type="button" class="primary" id="creer-routine">Créer</button>
+          <button type="button" id="fermer-bulle">Annuler</button>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section data-section="corps" hidden>
+    <div class="panel p-lav">
+      <h2>Où tu as mal ?</h2>
+      <p class="muted">Touche le corps pour poser un point. Glisse-le pour le déplacer. Touche-le pour changer son intensité, et une fois de plus pour l'enlever.</p>
+      <div class="opts" id="corps-vue" role="group" aria-label="Vue"></div>
+      <svg id="corps-svg" viewBox="0 0 200 410" role="img" aria-label="Silhouette du corps" style="width:100%;max-width:280px;display:block;margin:12px auto"></svg>
+      <div class="opts" id="corps-legende" style="justify-content:center"></div>
+      <p class="muted" id="corps-resume"></p>
+      <p>
+        <button class="primary" id="corps-save" type="button">Enregistrer ce point</button>
+        <button type="button" id="corps-clear">Effacer les points de cette vue</button>
+        <span class="muted" id="msg-corps"></span>
+      </p>
+    </div>
+    <div class="panel p-lime" id="carte-douleur"></div>
+    
+    <div class="panel p-lime" hidden>
+      <h2>Quel type de douleur ?</h2>
+      <p class="muted">Pas besoin de trouver le bon mot. Touche celui qui ressemble le plus, ou demande de l'aide.</p>
+      <div class="opts" id="types-douleur" role="group" aria-label="Type de douleur"></div>
+      <p class="muted" id="type-choisi"></p>
+      <button type="button" id="aide-douleur-ancien">Aide-moi à nommer ma douleur</button>
+      <div class="card-out" id="out-douleur-ancien" hidden></div>
+    </div>
+    <div class="panel p-sun" hidden>
+      <h2>Pour le bilan</h2>
+      <p class="muted" style="margin:0 0 6px">Depuis combien de temps ?</p>
+      <div class="opts" id="q-duree"></div>
+      <p class="muted" style="margin:10px 0 6px">Douleur ressentie en surface ou en profondeur ?</p>
+      <div class="opts" id="q-profondeur"></div>
+      <p class="muted" style="margin:10px 0 6px">Fréquence</p>
+      <div class="opts" id="q-frequence"></div>
+      <p class="muted" style="margin:10px 0 6px">Intensité (0 = aucune, 10 = la pire imaginable) : <span id="q-intensite-val">non notée</span></p>
+      <input type="range" id="q-intensite" min="0" max="10" value="0" style="width:100%">
+      <p class="muted" style="margin:10px 0 6px">Ce qui aggrave ou soulage</p>
+      <input type="text" id="q-aggrave" placeholder="ex. bouger, le repos, la chaleur">
+      <p class="muted" style="margin:10px 0 6px">Impact sur le sommeil ou les activités</p>
+      <div class="opts" id="q-impact"></div>
+      <p class="muted" style="margin:10px 0 6px">Signes associés</p>
+      <div class="opts" id="q-signes"></div>
+      <p class="muted" id="q-alerte" hidden style="margin-top:10px"></p>
+    </div>
+    <div class="panel p-lav">
+      <h2>Historique</h2>
+      <ul class="hist muted" id="hist-corps"></ul>
+    </div>
+    <p class="muted">Ce suivi ne pose aucun diagnostic. Si une douleur est forte, inhabituelle ou qui dure, parle-en à un médecin.</p>
+  </section>
+
+  <section data-section="hydratation" hidden>
+    <div class="rv-head"><h2 style="margin:0">Eau</h2><button type="button" id="vers-vessie">Vessie →</button></div>
+    <div class="panel p-peri">
+      <h2>Eau aujourd'hui</h2>
+      <p class="muted" id="eau-total"></p>
+      <p class="muted" id="eau-objectif-jour"></p>
+      <div class="progress"><span id="eau-barre"></span></div>
+      <p id="eau-message" style="font-weight:600;margin:8px 0 0"></p>
+      <p><button type="button" id="eau-valider" hidden>Valider l'objectif</button></p>
+      <div class="opts" id="eau-rapides" style="margin-top:10px"></div>
+      <p><button type="button" id="eau-annuler">Annuler le dernier ajout</button></p>
+      <p class="muted" id="eau-bilan-jour"></p>
+    </div>
+    <div class="panel p-lime">
+      <h2>Mon repère</h2>
+      <label>Repère par jour (en litres)
+        <input type="number" id="eau-objectif" min="0.5" max="6" step="0.25" value="2">
+      </label>
+      <p class="muted">C'est un repère général, pas un objectif médical. Si tu as des problèmes de reins, de cœur, ou si tu prends un traitement, demande à ton médecin combien boire.</p>
+      <p><button type="button" id="repere-valider">Valider l'objectif du jour</button></p>
+    </div>
+    <div class="panel p-lav">
+      <h2>Rappels</h2>
+      <label class="chip"><input type="checkbox" id="eau-rappel-actif"> Me rappeler de boire</label>
+      <label style="margin-top:8px">Toutes les
+        <select id="eau-intervalle" style="width:100%;padding:10px;border-radius:10px;font:inherit;margin-top:6px;margin-bottom:10px;background:rgba(255,255,255,.8);color:var(--ink)">
+          <option value="30">30 min</option>
+          <option value="60">1 h</option>
+          <option value="90">1 h 30</option>
+        </select>
+      </label>
+      <p class="muted">Entre 9 h et 20 h. Le rappel s'affiche dans l'app tant qu'elle est ouverte.</p>
+    </div>
+    <div class="panel p-lav">
+      <h2>Journal du jour</h2>
+      <ul class="hist muted" id="eau-journal"></ul>
+    </div>
+  </section>
+
+  <section data-section="vessie" hidden>
+    <div class="rv-head"><button type="button" id="vers-eau-2">← Eau</button><h2 style="margin:0;text-align:right">Vessie</h2></div>
+    <div class="panel p-peri" id="vessie-carte"></div>
+    <div class="panel p-lav" id="vessie-bilan" hidden>
+      <h2>Bilan de la journée</h2>
+      <p id="vessie-bilan-texte" style="margin:0"></p>
+    </div>
+    <div class="panel p-lav">
+      <div class="opts" style="justify-content:space-between">
+        <button type="button" id="vessie-semaine-prec">‹ Semaine précédente</button>
+        <button type="button" id="vessie-semaine-suiv">Semaine suivante ›</button>
+      </div>
+      <h2 id="vessie-semaine-titre" style="margin-top:10px"></h2>
+      <ul class="hist muted" id="vessie-semaine"></ul>
+    </div>
+    <p class="muted">Ce suivi ne pose aucun diagnostic.</p>
+  </section>
+
+  <section data-section="vessie-ancien" hidden>
+    <div class="rv-head"><button type="button" id="vers-eau">← Eau</button><h2 style="margin:0;text-align:right">Vessie</h2></div>
+    <div class="panel p-peri">
+      <h2>J'ai uriné</h2>
+      <p class="muted" style="margin:0 0 6px">Douleur, brûlure ou envie très urgente en urinant ?</p>
+      <div class="opts" id="vessie-brulure"></div>
+      <p class="muted" id="vessie-alerte" hidden style="margin-top:8px">Une douleur ou une brûlure en urinant, ou de la fièvre, mérite un avis médical rapidement.</p>
+      <p><button class="primary" type="button" id="vessie-ajouter">Noter maintenant</button></p>
+    </div>
+    <div class="panel p-lav">
+      <h2>Journal</h2>
+      <ul class="hist muted" id="vessie-journal"></ul>
+    </div>
+    <p class="muted">Ce suivi ne pose aucun diagnostic.</p>
+  </section>
+
+  <section data-section="bilan" hidden>
+    <div class="panel p-lav">
+      <h2>Bilan pour le médecin</h2>
+      <p class="muted">Ce bilan résume ce que tu as noté dans l'app. Ce n'est pas un diagnostic : il sert à montrer des faits au médecin, qui les interprétera.</p>
+      <div class="opts" id="periode" role="group" aria-label="Période"></div>
+    </div>
+    <div class="panel p-sun"><h2>Émotions</h2><div id="bilan-emo"></div></div>
+    <div class="panel p-peri"><h2>Sommeil</h2><div id="bilan-sommeil"></div></div>
+    <div class="panel p-lime">
+      <h2>Corps</h2>
+      <div id="bilan-corps"></div>
+    </div>
+    <div class="panel p-peri">
+      <h2>Eau</h2>
+      <div id="bilan-eau"></div>
+    </div>
+    <div class="panel p-sun">
+      <h2>Vessie</h2>
+      <div id="bilan-vessie"></div>
+    </div>
+    <div class="panel p-lav">
+      <h2>Réinitialiser mes données</h2>
+      <p class="muted">Efface les enregistrements de test : émotions, sommeil, routines, corps, douleurs, eau et vessie. Les réglages (repère d'eau, rappels) ne sont pas effacés. Appuie deux fois. Recharge ensuite la page.</p>
+      <p><button type="button" id="reinitialiser">Réinitialiser mes données de test</button></p>
+    </div>
+    <div class="panel p-lav">
+      <h2>Texte à copier</h2>
+      <textarea id="bilan-texte" rows="12" readonly style="width:100%;border-radius:10px;padding:10px;font:inherit;border:1px solid rgba(58,21,56,.35);background:rgba(255,255,255,.8);color:var(--ink);box-sizing:border-box"></textarea>
+      <p><button type="button" id="copier">Copier</button> <span class="muted" id="msg-copie"></span></p>
+    </div>
+  </section>
+</main>
+
+<div class="rappel-banner" id="rappel-banner" hidden role="status">
+  <span id="rappel-texte"></span>
+  <span class="rb-actions">
+    <button type="button" class="primary" id="rappel-ouvrir">Ouvrir la routine</button>
+    <button type="button" id="rappel-plus-tard">Plus tard</button>
+  </span>
+</div>
+
+<nav class="dock" aria-label="Sections">
+  <button class="tab" type="button" data-tab="emotions" aria-pressed="true"><span class="ico">✦</span>Émotions</button>
+  <button class="tab" type="button" data-tab="sommeil" aria-pressed="false"><span class="ico">✦</span>Sommeil</button>
+  <button class="tab" type="button" data-tab="todo" aria-pressed="false"><span class="ico">✦</span>À faire</button>
+  <button class="tab" type="button" data-tab="routines" aria-pressed="false"><span class="ico">✦</span>Routines</button>
+  <button class="tab" type="button" data-tab="corps" aria-pressed="false"><span class="ico">✦</span>Corps</button>
+  <button class="tab" type="button" data-tab="hydratation" aria-pressed="false"><span class="ico">✦</span>Eau</button>
+  <button class="tab" type="button" data-tab="bilan" aria-pressed="false"><span class="ico">✦</span>Bilan</button>
+</nav>
+
+<script>
+const RESSENTI = [
+  ["très bien", ["serein·e", "reposé·e", "enthousiaste"]],
+  ["plutôt bien", ["content·e", "calme", "motivé·e"]],
+  ["ça va", ["neutre", "flou·e", "en veille"]],
+  ["pas très bien", ["fatigué·e", "tendu·e", "triste", "agacé·e"]],
+  ["mal", ["submergé·e", "épuisé·e", "anxieux·se", "en colère", "vide"]]
+];
+const BATTERIE = [["Disponible", 100], ["Bon", 75], ["Ça va", 50], ["À plat", 25], ["Besoin d'espace", 0]];
+const RAISONS = ["Bruit", "Lumière", "Odeurs", "Contact physique", "Sollicitations", "Changement de routine", "Faim", "Soif", "Fatigue", "Manque de sommeil"];
+const RECUP = ["Très bien reposé·e", "Plutôt bien", "Moyen", "Peu reposé·e", "Pas du tout"];
+const SENSATIONS = ["Lourd·e", "Léger·e", "Courbatu·e", "Tête embrumée", "Mal de tête", "Envie de dormir encore"];
+const EMOJIS = ["🚿", "🦷", "👕", "🍳", "☕", "💧", "🎒", "🚪", "📚", "🧴", "🛏", "🧹", "🚶", "📱", "🎧", "🧘", "🌿", "✨"];
+const COULEURS_ROUTINE = ["var(--sun)", "var(--periwinkle)", "var(--lime)", "rgba(255,255,255,.75)"];
+const KEY = "checkin-beta";
+const KEY_SLEEP = "sommeil-beta";
+const KEY_ROUTINES = "routines-beta";
+const KEY_HIST = "routines-historique-beta";
+const KEY_CORPS = "corps-beta";
+const NS = "http://www.w3.org/2000/svg";
+
+const state = { ressenti: null, mot: null, batterie: null, raisons: new Set(), recup: null, sensations: new Set() };
+let sampleFn = null;
+
+function btn(label, parent, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = label;
+  b.setAttribute("aria-pressed", "false");
+  b.addEventListener("click", () => onClick(b));
+  parent.appendChild(b);
+  return b;
+}
+function pressOnly(parent, b) {
+  parent.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", "false"));
+  b.setAttribute("aria-pressed", "true");
+}
+function chipGroup(parent, items, set) {
+  items.forEach(r => {
+    const label = document.createElement("label");
+    label.className = "chip";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.addEventListener("change", () => cb.checked ? set.add(r) : set.delete(r));
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(r));
+    parent.appendChild(label);
+  });
+}
+function petitBouton(label, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = label;
+  b.addEventListener("click", onClick);
+  return b;
+}
+function minutesOf(t) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+function formatDuree(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return h + " h " + String(m).padStart(2, "0");
+}
+function formatTemps(ms) {
+  const s = Math.round(ms / 1000);
+  const m = Math.floor(s / 60), r = s % 60;
+  return m ? m + " min " + String(r).padStart(2, "0") + " s" : r + " s";
+}
+function formatChrono(ms) {
+  const s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+// Navigation du bas
+function show(name) {
+  document.querySelectorAll("section[data-section]").forEach(s => { s.hidden = s.dataset.section !== name; });
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-pressed", String(t.dataset.tab === name)));
+  window.scrollTo({ top: 0 });
+  if (name === "bilan") renderBilan();
+  if (name === "routines") voirListeRoutines();
+  if (name === "hydratation") renderEau();
+}
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => show(t.dataset.tab)));
+
+// Stockage local
+function loadKey(k) {
+  try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch (e) { return []; }
+}
+function persistKey(k, list) {
+  try { localStorage.setItem(k, JSON.stringify(list)); return true; } catch (e) { return false; }
+}
+
+/* ---------- Émotions ---------- */
+const ressentiEl = document.getElementById("ressenti");
+const motsEl = document.getElementById("mots");
+function showMots(niveau) {
+  motsEl.innerHTML = "";
+  state.mot = null;
+  const entry = RESSENTI.find(r => r[0] === niveau);
+  if (!entry) return;
+  entry[1].forEach(m => btn(m, motsEl, b => { pressOnly(motsEl, b); state.mot = m; }));
+}
+RESSENTI.forEach(([niveau]) => btn(niveau, ressentiEl, b => {
+  pressOnly(ressentiEl, b);
+  state.ressenti = niveau;
+  showMots(niveau);
+}));
+
+const batEl = document.getElementById("batterie");
+BATTERIE.forEach(([label, pct]) => btn(label + " (" + pct + " %)", batEl, b => {
+  pressOnly(batEl, b);
+  state.batterie = { label, pct };
+}));
+
+chipGroup(document.getElementById("raisons"), RAISONS, state.raisons);
+
+function renderHist() {
+  const h = document.getElementById("hist");
+  h.innerHTML = "";
+  const list = loadKey(KEY).slice(-10).reverse();
+  if (!list.length) { h.textContent = "Rien encore."; return; }
+  list.forEach(e => {
+    const li = document.createElement("li");
+    const d = new Date(e.date).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+    li.textContent = d + " · " + (e.ressenti || "–") + (e.mot ? " (" + e.mot + ")" : "") +
+      " · batterie : " + (e.batterie ? e.batterie.label + " " + e.batterie.pct + " %" : "–") +
+      (e.raisons.length ? " · " + e.raisons.join(", ") : "") +
+      (e.autre ? " · " + e.autre : "");
+    h.appendChild(li);
+  });
+}
+
+document.getElementById("save").addEventListener("click", () => {
+  const msg = document.getElementById("msg");
+  if (!state.ressenti && !state.batterie) {
+    msg.textContent = "Choisis au moins un ressenti ou un niveau de batterie.";
+    return;
+  }
+  const entry = {
+    date: new Date().toISOString(),
+    ressenti: state.ressenti,
+    mot: state.mot,
+    batterie: state.batterie,
+    raisons: [...state.raisons],
+    autre: document.getElementById("autre").value.trim()
+  };
+  const list = loadKey(KEY);
+  list.push(entry);
+  msg.textContent = persistKey(KEY, list) ? "Enregistré." : "Impossible d'enregistrer ici.";
+  renderHist();
+});
+
+(async () => {
+  try {
+    if (window.claude) sampleFn = await window.claude.use("sample");
+  } catch (e) { sampleFn = null; }
+})();
+
+document.getElementById("demeler").addEventListener("click", async () => {
+  const out = document.getElementById("out");
+  const demelerBtn = document.getElementById("demeler");
+  out.hidden = false;
+  if (!sampleFn) { out.textContent = "Cette fonction n'est pas disponible ici."; return; }
+  const snapshot = {
+    ressenti: state.ressenti, mot: state.mot,
+    batterie: state.batterie ? state.batterie.label + " (" + state.batterie.pct + " %)" : null,
+    raisons: [...state.raisons],
+    autre: document.getElementById("autre").value.trim()
+  };
+  const prompt =
+    "Tu accompagnes une personne neuroatypique qui veut mieux comprendre ce qu'elle ressent. " +
+    "Réponds en français, de façon douce et brève. Pose une seule question à la fois. " +
+    "Propose au plus deux pistes, formulées comme des possibilités (émotion ou besoin), et demande ce qui colle. " +
+    "Ne pose aucun diagnostic. Données du check-in actuel : " + JSON.stringify(snapshot);
+  demelerBtn.disabled = true;
+  out.textContent = "Réflexion…";
+  try {
+    await sampleFn(prompt, {
+      cache: false,
+      modelTier: "quick",
+      onText: ({ text }) => { out.textContent = text; }
+    });
+  } catch (e) {
+    if (e && e.code === "not_granted") { sampleFn = null; out.textContent = "Accès refusé."; }
+    else if (e && e.code === "rate_limited") { out.textContent = "Trop de demandes pour l'instant, réessaie dans un moment."; }
+    else { out.textContent = e && e.text ? e.text : "Claude n'a pas pu répondre."; }
+  } finally {
+    demelerBtn.disabled = false;
+  }
+});
+
+/* ---------- Sommeil ---------- */
+const recupEl = document.getElementById("recup");
+RECUP.forEach(r => btn(r, recupEl, b => { pressOnly(recupEl, b); state.recup = r; }));
+chipGroup(document.getElementById("sensations"), SENSATIONS, state.sensations);
+
+const reveilsList = document.getElementById("reveils-list");
+function addReveil() {
+  const row = document.createElement("div");
+  row.className = "row";
+  const inp = document.createElement("input");
+  inp.type = "time";
+  inp.setAttribute("aria-label", "Heure du réveil");
+  const dur = document.createElement("input");
+  dur.type = "number";
+  dur.min = "0";
+  dur.max = "600";
+  dur.step = "5";
+  dur.placeholder = "min éveillé·e";
+  dur.setAttribute("aria-label", "Durée du réveil en minutes");
+  const rm = document.createElement("button");
+  rm.type = "button";
+  rm.textContent = "Retirer";
+  rm.addEventListener("click", () => { row.remove(); updateDuree(); });
+  inp.addEventListener("input", updateDuree);
+  dur.addEventListener("input", updateDuree);
+  row.append(inp, dur, rm);
+  reveilsList.appendChild(row);
+  inp.focus();
+}
+document.getElementById("add-reveil").addEventListener("click", addReveil);
+function getReveils() {
+  return [...reveilsList.querySelectorAll(".row")]
+    .map(r => ({
+      heure: r.querySelector("input[type=time]").value,
+      duree: parseInt(r.querySelector("input[type=number]").value, 10) || 0
+    }))
+    .filter(r => r.heure);
+}
+function updateDuree() {
+  const c = document.getElementById("coucher").value;
+  const l = document.getElementById("lever").value;
+  const out = document.getElementById("duree");
+  if (!c || !l) { out.textContent = "Entre les deux heures pour voir la durée."; return; }
+  // Si le réveil est avant le coucher, on compte le passage de minuit.
+  const passe = (minutesOf(l) - minutesOf(c) + 1440) % 1440;
+  const lat = parseInt(document.getElementById("latence").value, 10) || 0;
+  const eveille = getReveils().reduce((s, r) => s + r.duree, 0);
+  const sommeil = Math.max(0, passe - lat - eveille);
+  out.textContent = "Au lit : " + formatDuree(passe) + ". Sommeil estimé (sans l'endormissement ni les réveils) : " + formatDuree(sommeil) + ".";
+}
+["coucher", "lever", "latence"].forEach(id =>
+  document.getElementById(id).addEventListener("input", updateDuree));
+
+function renderSleepHist() {
+  const h = document.getElementById("hist-sleep");
+  h.innerHTML = "";
+  const list = loadKey(KEY_SLEEP).slice(-10).reverse();
+  if (!list.length) { h.textContent = "Rien encore."; return; }
+  list.forEach(e => {
+    const li = document.createElement("li");
+    const d = new Date(e.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+    li.textContent = d + " · " + e.coucher + " → " + e.lever +
+      " · " + formatDuree(e.dureeMin) +
+      " · endormissement : " + e.latence + " min" +
+      " · réveils : " + e.reveils.length + (e.reveils.length ? " (" + e.reveils.map(r => r.heure + " pendant " + r.duree + " min").join(", ") + ")" : "") +
+      " · récupéré : " + (e.recup || "–") +
+      (e.sensations.length ? " · " + e.sensations.join(", ") : "");
+    h.appendChild(li);
+  });
+}
+
+document.getElementById("save-sleep").addEventListener("click", () => {
+  const msg = document.getElementById("msg-sleep");
+  const c = document.getElementById("coucher").value;
+  const l = document.getElementById("lever").value;
+  if (!c || !l) { msg.textContent = "Indique l'heure du coucher et du réveil."; return; }
+  const entry = {
+    date: new Date().toISOString(),
+    coucher: c,
+    lever: l,
+    dureeMin: (minutesOf(l) - minutesOf(c) + 1440) % 1440,
+    latence: parseInt(document.getElementById("latence").value, 10) || 0,
+    reveils: getReveils(),
+    recup: state.recup,
+    sensations: [...state.sensations]
+  };
+  const list = loadKey(KEY_SLEEP);
+  list.push(entry);
+  msg.textContent = persistKey(KEY_SLEEP, list) ? "Nuit enregistrée." : "Impossible d'enregistrer ici.";
+  renderSleepHist();
+});
+
+/* ---------- Routines ---------- */
+// Une étape = { emoji, nom }. Une routine est « conclue » une fois que l'utilisateur valide ses étapes.
+let routines = loadKey(KEY_ROUTINES).map(r => ({
+  id: r.id,
+  nom: r.nom,
+  etapes: (r.etapes || []).map(t => typeof t === "string" ? { emoji: "✨", nom: t } : t),
+  conclue: r.conclue !== undefined ? r.conclue : (r.etapes || []).length > 0,
+  rappel: r.rappel
+}));
+let editId = null;
+let emojiChoisi = EMOJIS[0];
+let run = null;
+let chronoTimer = null;
+let suppressionEnAttente = false;
+
+function saveRoutines() { persistKey(KEY_ROUTINES, routines); }
+function trouverRoutine(id) { return routines.find(r => r.id === id); }
+
+// Affiche une seule vue des routines ; l'animation d'entrée se relance à chaque changement
+function voirVue(vue) {
+  ["rv-liste", "rv-edit", "rv-vue", "rv-run", "rv-historique"].forEach(id => {
+    document.getElementById(id).hidden = id !== vue;
+  });
+}
+function voirListeRoutines() {
+  if (run) return; // une routine est en cours : on reste sur l'écran de run
+  renderRoutines();
+  voirVue("rv-liste");
+}
+
+function renderRoutines() {
+  const el = document.getElementById("routines-liste");
+  el.innerHTML = "";
+  if (!routines.length) {
+    el.innerHTML = '<p class="muted">Aucune routine pour l\'instant. Appuie sur le + pour en créer une.</p>';
+    return;
+  }
+  routines.forEach((r, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "routine-card";
+    b.style.background = COULEURS_ROUTINE[i % COULEURS_ROUTINE.length];
+    b.style.animationDelay = (i * 60) + "ms";
+    const sq = document.createElement("span");
+    sq.className = "sq";
+    sq.textContent = r.etapes.length ? r.etapes[0].emoji : "✦";
+    const txt = document.createElement("span");
+    txt.textContent = r.nom;
+    const sous = document.createElement("span");
+    sous.className = "sous";
+    sous.style.display = "block";
+    sous.textContent = r.etapes.length + " étape(s)" + (r.conclue ? "" : " · à conclure");
+    txt.appendChild(sous);
+    b.append(sq, txt);
+    b.addEventListener("click", () => r.conclue ? ouvrirVue(r.id) : ouvrirEdition(r.id));
+    el.appendChild(b);
+  });
+}
+
+/* Bulle de création */
+const bulle = document.getElementById("bulle");
+const fab = document.getElementById("ouvrir-bulle");
+function ouvrirBulle() {
+  fab.classList.add("tourne");
+  bulle.hidden = false;
+  void bulle.offsetWidth; // force le rendu avant l'animation
+  bulle.classList.add("open");
+  document.getElementById("nouvelle-routine").focus();
+}
+function fermerBulle() {
+  fab.classList.remove("tourne");
+  bulle.classList.remove("open");
+  setTimeout(() => { bulle.hidden = true; }, 300);
+}
+fab.addEventListener("click", ouvrirBulle);
+document.getElementById("fermer-bulle").addEventListener("click", fermerBulle);
+bulle.addEventListener("click", e => { if (e.target === bulle) fermerBulle(); });
+
+document.getElementById("creer-routine").addEventListener("click", () => {
+  const inp = document.getElementById("nouvelle-routine");
+  const nom = inp.value.trim();
+  if (!nom) { inp.focus(); return; }
+  const r = { id: Date.now().toString(36), nom: nom, etapes: [], conclue: false };
+  routines.push(r);
+  saveRoutines();
+  inp.value = "";
+  fermerBulle();
+  ouvrirEdition(r.id);
+});
+
+/* Édition des étapes */
+function ouvrirEdition(id) {
+  editId = id;
+  suppressionEnAttente = false;
+  document.getElementById("supprimer-routine").textContent = "Supprimer la routine";
+  document.getElementById("msg-edit").textContent = "";
+  voirVue("rv-edit");
+  renderEmojiChoix();
+  renderEdit();
+}
+function renderEmojiChoix() {
+  const el = document.getElementById("emoji-choix");
+  el.innerHTML = "";
+  EMOJIS.forEach(em => {
+    const b = btn(em, el, bb => { pressOnly(el, bb); emojiChoisi = em; });
+    b.setAttribute("aria-label", "Emoji " + em);
+    if (em === emojiChoisi) b.setAttribute("aria-pressed", "true");
+  });
+}
+function renderEdit() {
+  const r = trouverRoutine(editId);
+  if (!r) { voirListeRoutines(); return; }
+  document.getElementById("edit-titre").textContent = r.nom;
+  document.getElementById("rappel-heure").value = r.rappel ? r.rappel.heure : "";
+  document.getElementById("rappel-fin").value = r.rappel && r.rappel.fin ? r.rappel.fin : "";
+  document.getElementById("msg-rappel").textContent = "";
+  const el = document.getElementById("etapes-liste");
+  el.innerHTML = "";
+  if (!r.etapes.length) {
+    el.innerHTML = '<p class="muted">Ajoute tes étapes une par une.</p>';
+    return;
+  }
+  r.etapes.forEach((et, i) => {
+    const row = document.createElement("div");
+    row.className = "step-row";
+    row.style.animationDelay = (i * 40) + "ms";
+    const sq = document.createElement("span");
+    sq.className = "sq";
+    sq.textContent = et.emoji;
+    const nom = document.createElement("span");
+    nom.className = "nom";
+    nom.textContent = et.nom;
+    row.append(
+      sq, nom,
+      petitBouton("↑", () => deplacer(i, -1)),
+      petitBouton("↓", () => deplacer(i, 1)),
+      petitBouton("Retirer", () => { r.etapes.splice(i, 1); saveRoutines(); renderEdit(); })
+    );
+    el.appendChild(row);
+  });
+}
+function deplacer(i, d) {
+  const r = trouverRoutine(editId);
+  const j = i + d;
+  if (!r || j < 0 || j >= r.etapes.length) return;
+  [r.etapes[i], r.etapes[j]] = [r.etapes[j], r.etapes[i]];
+  saveRoutines();
+  renderEdit();
+}
+document.getElementById("ajouter-etape").addEventListener("click", () => {
+  const r = trouverRoutine(editId);
+  const inp = document.getElementById("nouvelle-etape");
+  const t = inp.value.trim();
+  if (!r || !t) { inp.focus(); return; }
+  r.etapes.push({ emoji: emojiChoisi, nom: t });
+  saveRoutines();
+  inp.value = "";
+  renderEdit();
+});
+document.getElementById("conclure").addEventListener("click", () => {
+  const r = trouverRoutine(editId);
+  if (!r) return;
+  if (!r.etapes.length) {
+    document.getElementById("msg-edit").textContent = "Ajoute au moins une étape avant de conclure.";
+    return;
+  }
+  r.conclue = true;
+  saveRoutines();
+  ouvrirVue(r.id);
+});
+document.getElementById("retour-edit").addEventListener("click", () => {
+  const r = trouverRoutine(editId);
+  editId = null;
+  if (r && r.conclue) ouvrirVue(r.id);
+  else voirListeRoutines();
+});
+document.getElementById("supprimer-routine").addEventListener("click", () => {
+  const btnSup = document.getElementById("supprimer-routine");
+  if (!suppressionEnAttente) {
+    suppressionEnAttente = true;
+    btnSup.textContent = "Cliquer encore pour supprimer";
+    return;
+  }
+  routines = routines.filter(r => r.id !== editId);
+  saveRoutines();
+  editId = null;
+  suppressionEnAttente = false;
+  voirListeRoutines();
+});
+
+/* Rappels : enregistrement dans la page d'édition */
+document.getElementById("rappel-enregistrer").addEventListener("click", () => {
+  const r = trouverRoutine(editId);
+  const msg = document.getElementById("msg-rappel");
+  if (!r) return;
+  const heure = document.getElementById("rappel-heure").value;
+  const fin = document.getElementById("rappel-fin").value;
+  if (!heure || !fin) { msg.textContent = "Choisis l'heure du premier rappel et celle du dernier."; return; }
+  if (minutesOf(fin) <= minutesOf(heure)) { msg.textContent = "Le dernier rappel doit être après le premier."; return; }
+  r.rappel = { heure: heure, fin: fin };
+  saveRoutines();
+  msg.textContent = "Rappel enregistré.";
+});
+document.getElementById("rappel-retirer").addEventListener("click", () => {
+  const r = trouverRoutine(editId);
+  if (!r) return;
+  delete r.rappel;
+  saveRoutines();
+  document.getElementById("rappel-heure").value = "";
+  document.getElementById("rappel-fin").value = "";
+  document.getElementById("msg-rappel").textContent = "Rappel retiré.";
+});
+function texteRappel(r) {
+  return r.rappel && r.rappel.fin ? "Rappel à " + r.rappel.heure + ", puis dernier rappel à " + r.rappel.fin : "Pas de rappel";
+}
+
+/* Vue d'une routine conclue : Démarrer ou Modifier */
+function ouvrirVue(id) {
+  editId = id;
+  const r = trouverRoutine(id);
+  if (!r) { voirListeRoutines(); return; }
+  document.getElementById("vue-titre").textContent = r.nom;
+  document.getElementById("vue-rappel").textContent = texteRappel(r);
+  const el = document.getElementById("vue-etapes");
+  el.innerHTML = "";
+  r.etapes.forEach((et, i) => {
+    const row = document.createElement("div");
+    row.className = "step-row";
+    row.style.animationDelay = (i * 50) + "ms";
+    const num = document.createElement("span");
+    num.className = "num";
+    num.textContent = (i + 1);
+    const sq = document.createElement("span");
+    sq.className = "sq";
+    sq.textContent = et.emoji;
+    const nom = document.createElement("span");
+    nom.className = "nom";
+    nom.textContent = et.nom;
+    row.append(num, sq, nom);
+    el.appendChild(row);
+  });
+  voirVue("rv-vue");
+}
+document.getElementById("retour-vue").addEventListener("click", () => {
+  editId = null;
+  voirListeRoutines();
+});
+document.getElementById("modifier").addEventListener("click", () => ouvrirEdition(editId));
+
+/* Supprimer la routine depuis son écran (appuyer deux fois) */
+let suppressionVueEnAttente = false;
+document.getElementById("supprimer-routine-vue").addEventListener("click", () => {
+  const b = document.getElementById("supprimer-routine-vue");
+  if (!suppressionVueEnAttente) {
+    suppressionVueEnAttente = true;
+    b.textContent = "Cliquer encore pour supprimer";
+    return;
+  }
+  routines = routines.filter(r => r.id !== editId);
+  saveRoutines();
+  editId = null;
+  suppressionVueEnAttente = false;
+  b.textContent = "Supprimer la routine";
+  voirListeRoutines();
+});
+
+/* Démarrer une routine : une étape à la fois, avec son chrono */
+document.getElementById("demarrer").addEventListener("click", () => {
+  const r = trouverRoutine(editId);
+  if (!r || !r.etapes.length) return;
+  run = { id: r.id, index: 0, debut: Date.now(), resultats: [] };
+  document.getElementById("run-resume").hidden = true;
+  demarrerChrono();
+  voirVue("rv-run");
+  renderRun();
+});
+
+function demarrerChrono() {
+  arreterChrono();
+  chronoTimer = setInterval(() => {
+    if (!run) return;
+    document.getElementById("run-chrono").textContent = formatChrono(Date.now() - run.debut);
+  }, 500);
+}
+function arreterChrono() {
+  if (chronoTimer) clearInterval(chronoTimer);
+  chronoTimer = null;
+}
+
+function renderRun() {
+  const r = run && trouverRoutine(run.id);
+  if (!r) { voirListeRoutines(); return; }
+  const total = r.etapes.length;
+  const fini = run.index >= total;
+  document.getElementById("nuage").hidden = !fini;
+  document.getElementById("run-barre").style.width = Math.round((run.index / total) * 100) + "%";
+  const emojiEl = document.getElementById("run-emoji");
+  if (fini) {
+    arreterChrono();
+    document.getElementById("run-progres").textContent = "Routine « " + r.nom + " » terminée";
+    emojiEl.textContent = "✅";
+    document.getElementById("run-etape").textContent = "";
+    document.getElementById("run-chrono").textContent = formatChrono(0);
+    document.getElementById("run-faite").hidden = true;
+    document.getElementById("run-passer").hidden = true;
+    document.getElementById("run-arreter").hidden = true;
+    enregistrerRoutine(r);
+    afficherResume();
+  } else {
+    const et = r.etapes[run.index];
+    document.getElementById("run-progres").textContent = "Étape " + (run.index + 1) + " sur " + total + " · " + r.nom;
+    emojiEl.textContent = et.emoji;
+    document.getElementById("run-etape").textContent = et.nom;
+    document.getElementById("run-chrono").textContent = "0:00";
+    document.getElementById("run-faite").hidden = false;
+    document.getElementById("run-passer").hidden = false;
+    document.getElementById("run-arreter").hidden = false;
+    run.debut = Date.now();
+    demarrerChrono();
+  }
+  emojiEl.classList.remove("bump");
+  void emojiEl.offsetWidth;
+  emojiEl.classList.add("bump");
+}
+
+function terminerEtape(statut) {
+  if (!run) return;
+  const r = trouverRoutine(run.id);
+  const et = r.etapes[run.index];
+  run.resultats.push({ emoji: et.emoji, nom: et.nom, ms: Date.now() - run.debut, statut: statut });
+  run.index++;
+  renderRun();
+}
+document.getElementById("run-faite").addEventListener("click", () => terminerEtape("faite"));
+function validerParEmoji() {
+  if (!run) return;
+  const r = trouverRoutine(run.id);
+  if (!r || run.index >= r.etapes.length) return;
+  terminerEtape("faite");
+}
+document.getElementById("run-emoji").addEventListener("click", validerParEmoji);
+document.getElementById("run-emoji").addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); validerParEmoji(); }
+});
+document.getElementById("run-passer").addEventListener("click", () => terminerEtape("passée"));
+document.getElementById("run-arreter").addEventListener("click", () => {
+  arreterChrono();
+  run = null;
+  voirListeRoutines();
+});
+document.getElementById("run-retour").addEventListener("click", () => {
+  arreterChrono();
+  run = null;
+  voirListeRoutines();
+});
+
+function afficherResume() {
+  const box = document.getElementById("run-resume");
+  const liste = document.getElementById("run-resume-liste");
+  box.hidden = false;
+  liste.innerHTML = "";
+  let total = 0;
+  run.resultats.forEach((res, i) => {
+    total += res.ms;
+    const p = document.createElement("p");
+    p.style.margin = "6px 0";
+    p.style.animation = "popIn .35s var(--ease-out) both";
+    p.style.animationDelay = (i * 60) + "ms";
+    p.textContent = res.emoji + " " + res.nom + " : " + formatTemps(res.ms) + " (" + res.statut + ")";
+    liste.appendChild(p);
+  });
+  const t = document.createElement("p");
+  t.style.fontWeight = "700";
+  t.textContent = "Total : " + formatTemps(total);
+  liste.appendChild(t);
+}
+
+/* Historique des routines et encouragements */
+const PHRASES_ROUTINE = [
+  "Bravo d'avoir fait ta routine.",
+  "Tu as pris soin de toi aujourd'hui.",
+  "Une routine terminée, c'est une vraie petite victoire.",
+  "Ça y est, c'est fait. Tu peux être fier·e de toi.",
+  "Chaque étape compte, et tu les as traversées une à une.",
+  "Tu t'y es mis·e, c'est déjà beaucoup.",
+  "Ton cerveau vient de recevoir une petite récompense."
+];
+const PHRASES_PASSEES = [
+  "Tu as continué malgré tout, c'est précieux.",
+  "Passer une étape ne retire rien à ce que tu as fait.",
+  "Tu as terminé la routine à ta manière, bravo."
+];
+
+function enregistrerRoutine(r) {
+  const res = run.resultats;
+  const faites = res.filter(x => x.statut === "faite").length;
+  const passees = res.length - faites;
+  const total = res.reduce((s, x) => s + x.ms, 0);
+  const list = loadKey(KEY_HIST);
+  list.push({ id: r.id, date: new Date().toISOString(), nom: r.nom, faites: faites, passees: passees, total: total, etapes: res });
+  persistKey(KEY_HIST, list);
+  const phrases = passees ? PHRASES_PASSEES : PHRASES_ROUTINE;
+  document.getElementById("nuage").querySelector(".txt").textContent = phrases[Math.floor(Math.random() * phrases.length)];
+}
+
+function renderHistorique() {
+  const el = document.getElementById("historique-liste");
+  el.innerHTML = "";
+  const list = loadKey(KEY_HIST).slice().reverse();
+  if (!list.length) { el.innerHTML = '<p class="muted">Pas encore de routine terminée.</p>'; return; }
+  list.forEach((h, i) => {
+    const card = document.createElement("div");
+    card.className = "panel p-lav";
+    card.style.animation = "popIn .4s var(--ease-out) both";
+    card.style.animationDelay = (i * 50) + "ms";
+    const titre = document.createElement("h2");
+    titre.style.fontSize = "1rem";
+    titre.textContent = h.nom + " · " + new Date(h.date).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+    card.appendChild(titre);
+    const resume = document.createElement("p");
+    resume.style.margin = "0 0 6px";
+    resume.textContent = h.faites + " faite(s) · " + h.passees + " passée(s) · total " + formatTemps(h.total);
+    card.appendChild(resume);
+    (h.etapes || []).forEach(et => {
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.style.margin = "2px 0";
+      p.textContent = et.emoji + " " + et.nom + " : " + formatTemps(et.ms) + (et.statut === "passée" ? " (passée)" : "");
+      card.appendChild(p);
+    });
+    el.appendChild(card);
+  });
+}
+document.getElementById("ouvrir-historique").addEventListener("click", () => {
+  renderHistorique();
+  voirVue("rv-historique");
+});
+document.getElementById("retour-historique").addEventListener("click", () => {
+  renderRoutines();
+  voirVue("rv-liste");
+});
+
+/* Rappels : bannière, vérifiée toutes les 30 secondes tant que la page est ouverte */
+const rappelBanner = document.getElementById("rappel-banner");
+function cacherRappel() {
+  rappelBanner.classList.remove("montre");
+  setTimeout(() => { rappelBanner.hidden = true; }, 450);
+}
+function afficherRappel(r, dernier) {
+  document.getElementById("rappel-texte").textContent = "C'est l'heure de ta routine « " + r.nom + " ». Tu peux commencer quand tu veux.";
+  document.getElementById("rappel-ouvrir").textContent = "Ouvrir la routine";
+  document.getElementById("rappel-ouvrir").onclick = () => {
+    cacherRappel();
+    show("routines");
+    ouvrirVue(r.id);
+  };
+  if (dernier) document.getElementById("rappel-texte").textContent = "Dernier rappel pour aujourd'hui : ta routine " + r.nom + " t'attend. Une seule étape suffit pour commencer.";
+  document.getElementById("rappel-plus-tard").onclick = cacherRappel;
+  rappelBanner.hidden = false;
+  void rappelBanner.offsetWidth;
+  rappelBanner.classList.add("montre");
+}
+function dateDuJour() {
+  const d = new Date();
+  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+}
+function lireEnvois() {
+  try { return JSON.parse(localStorage.getItem("rappels-envoyes-beta") || "{}"); } catch (e) { return {}; }
+}
+function noterEnvoi(cle) {
+  const e = lireEnvois();
+  e[cle] = true;
+  try { localStorage.setItem("rappels-envoyes-beta", JSON.stringify(e)); } catch (err) {}
+}
+function routineFaiteAujourdhui(id) {
+  const aujourdhui = new Date().toDateString();
+  return loadKey(KEY_HIST).some(h => h.id === id && new Date(h.date).toDateString() === aujourdhui);
+}
+function verifierRappels() {
+  if (run) return; // pas de rappel pendant une routine
+  const maintenant = new Date();
+  const minutesMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
+  routines.forEach(r => {
+    if (!r.conclue || !r.rappel || !r.rappel.fin) return;
+    if (routineFaiteAujourdhui(r.id)) return;
+    const jour = dateDuJour();
+    const envois = lireEnvois();
+    [["premier", r.rappel.heure], ["dernier", r.rappel.fin]].forEach(([nom, heure]) => {
+      const cle = r.id + "-" + nom + "-" + jour;
+      if (minutesMaintenant >= minutesOf(heure) && !envois[cle]) {
+        noterEnvoi(cle);
+        afficherRappel(r, nom === "dernier");
+      }
+    });
+  });
+}
+setInterval(verifierRappels, 30000);
+verifierRappels();
+
+/* ---------- Corps ---------- */
+const NIVEAUX = [
+  { nom: "légère", couleur: "#FFC2C8" },
+  { nom: "modérée", couleur: "#FF6B6B" },
+  { nom: "forte", couleur: "#E0102A" }
+];
+// Repères : servent à nommer l'endroit où se trouve un point (le plus proche)
+const REPERES = [
+  { x: 100, y: 69, nom: "Front", dos: "Arrière de la tête" },
+  { x: 88, y: 77, nom: "Tempe droite", dos: "Tempe droite" },
+  { x: 112, y: 77, nom: "Tempe gauche", dos: "Tempe gauche" },
+  { x: 100, y: 114, nom: "Mâchoire", dos: "Haut de la nuque" },
+  { x: 100, y: 123, nom: "Cou", dos: "Nuque" },
+  { x: 62, y: 137, nom: "Épaule droite" },
+  { x: 137, y: 137, nom: "Épaule gauche" },
+  { x: 83, y: 154, nom: "Poitrine droite", dos: "Haut du dos, côté droit" },
+  { x: 116, y: 154, nom: "Poitrine gauche", dos: "Haut du dos, côté gauche" },
+  { x: 115, y: 158, nom: "Cœur", vue: "devant" },
+  { x: 100, y: 164, nom: "Ventre", dos: "Bas du dos" },
+  { x: 100, y: 191, nom: "Bassin", dos: "Fesses" },
+  { x: 45, y: 134, nom: "Bras droit" },
+  { x: 156, y: 134, nom: "Bras gauche" },
+  { x: 30, y: 158, nom: "Coude droit" },
+  { x: 175, y: 158, nom: "Coude gauche" },
+  { x: 12, y: 188, nom: "Poignet droit" },
+  { x: 195, y: 188, nom: "Poignet gauche" },
+  { x: 91, y: 227, nom: "Cuisse droite" },
+  { x: 112, y: 227, nom: "Cuisse gauche" },
+  { x: 91, y: 267, nom: "Genou droit" },
+  { x: 112, y: 267, nom: "Genou gauche" },
+  { x: 78, y: 297, nom: "Mollet droit" },
+  { x: 122, y: 297, nom: "Mollet gauche" },
+  { x: 72, y: 324, nom: "Cheville droite" },
+  { x: 128, y: 324, nom: "Cheville gauche" },
+  { x: 63, y: 341, nom: "Pied droit" },
+  { x: 138, y: 341, nom: "Pied gauche" }
+];
+
+let vueCorps = "devant";
+let pts = []; // { id, vue, x, y, niveau }
+let nextPtId = 1;
+let glisse = null;
+const corpsSvg = document.getElementById("corps-svg");
+
+function repereNom(r) { return vueCorps === "dos" && r.dos ? r.dos : r.nom; }
+function repereProche(x, y) {
+  let best = null, bestD = Infinity;
+  REPERES.forEach(r => {
+    if (r.vue && r.vue !== vueCorps) return;
+    const d = (r.x - x) * (r.x - x) + (r.y - y) * (r.y - y);
+    if (d < bestD) { bestD = d; best = r; }
+  });
+  return best && bestD <= 35 * 35 ? repereNom(best) : "zone sans repère";
+}
+
+function dessinerCorps() {
+  const dos = vueCorps === "dos";
+  const src = dos ? "images/corps-dos.png" : "images/corps-devant.png";
+  const s = 0.3017; // échelle : la silhouette fait 200 px de large
+  corpsSvg.innerHTML = `
+    <defs>
+      <linearGradient id="gFace" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#d9d5e2"/><stop offset="1" stop-color="#8f889f"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="200" height="410" rx="22" fill="#2b2a31"/>
+    <image data-body="1" href="${src}" x="${-140 * s}" y="${60 - 5 * s}" width="${950 * s}" height="${958 * s}" preserveAspectRatio="none" style="mix-blend-mode:screen"/>
+    ${dos ? "" : `<ellipse cx="100" cy="204" rx="9" ry="7" fill="url(#gFace)" pointer-events="none"/>`}
+    <text x="100" y="402" text-anchor="middle" fill="#e8e4ee" font-size="13" font-family="system-ui" font-weight="600" letter-spacing="2" pointer-events="none">${dos ? "DE DOS" : "DE FACE"}</text>
+  `;
+  renderPoints();
+}
+
+// Ancienne version dessinée à la main, gardée en réserve
+function dessinerCorpsDessin() {
+  const dos = vueCorps === "dos";
+  const fond = dos ? "url(#gDos)" : "url(#gFace)";
+  const trait = dos ? "#4b4658" : "#7d7590";
+  const articulation = dos ? "#7f7890" : "#bdb5cc";
+  const ombre = "#000";
+  corpsSvg.innerHTML = `
+    <defs>
+      <linearGradient id="gFace" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#f1edf7"/><stop offset=".55" stop-color="#d6d0e2"/><stop offset="1" stop-color="#a59db5"/>
+      </linearGradient>
+      <linearGradient id="gDos" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#b9b2c8"/><stop offset=".55" stop-color="#948da4"/><stop offset="1" stop-color="#6d6779"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="200" height="410" rx="22" fill="#2b2a31"/>
+    <g opacity=".35" transform="translate(3 4)" fill="none" stroke="${ombre}" stroke-linecap="round" pointer-events="none">
+      <path d="M86 204 L86 290" stroke-width="24"/><path d="M114 204 L114 290" stroke-width="24"/>
+      <path d="M86 290 L90 382" stroke-width="15"/><path d="M114 290 L110 382" stroke-width="15"/>
+      <path d="M68 98 L50 184" stroke-width="16"/><path d="M132 98 L150 184" stroke-width="16"/>
+      <path d="M50 184 L36 252" stroke-width="13"/><path d="M150 184 L164 252" stroke-width="13"/>
+    </g>
+
+    <g id="corps-dessin">
+      <path data-body="1" d="M86 204 L86 290" stroke="${fond}" stroke-width="24" stroke-linecap="round" fill="none"/>
+      <path data-body="1" d="M114 204 L114 290" stroke="${fond}" stroke-width="24" stroke-linecap="round" fill="none"/>
+      <path data-body="1" d="M86 290 L90 382" stroke="${fond}" stroke-width="15" stroke-linecap="round" fill="none"/>
+      <path data-body="1" d="M114 290 L110 382" stroke="${fond}" stroke-width="15" stroke-linecap="round" fill="none"/>
+      <ellipse data-body="1" cx="88" cy="392" rx="12" ry="6" fill="${fond}"/>
+      <ellipse data-body="1" cx="112" cy="392" rx="12" ry="6" fill="${fond}"/>
+
+      <path data-body="1" d="M76 94 C86 86 114 86 124 94 C130 104 128 132 126 152 C125 170 130 190 132 206 L68 206 C70 190 75 170 74 152 C72 132 70 104 76 94 Z" fill="${fond}"/>
+      <rect data-body="1" x="92" y="66" width="16" height="24" rx="6" fill="${fond}"/>
+      <ellipse data-body="1" cx="100" cy="50" rx="20" ry="26" fill="${fond}"/>
+
+      <circle data-body="1" cx="68" cy="96" r="12" fill="${fond}"/>
+      <circle data-body="1" cx="132" cy="96" r="12" fill="${fond}"/>
+      <path data-body="1" d="M68 98 L50 184" stroke="${fond}" stroke-width="16" stroke-linecap="round" fill="none"/>
+      <path data-body="1" d="M132 98 L150 184" stroke="${fond}" stroke-width="16" stroke-linecap="round" fill="none"/>
+      <path data-body="1" d="M50 184 L36 252" stroke="${fond}" stroke-width="13" stroke-linecap="round" fill="none"/>
+      <path data-body="1" d="M150 184 L164 252" stroke="${fond}" stroke-width="13" stroke-linecap="round" fill="none"/>
+      <ellipse data-body="1" cx="33" cy="266" rx="8" ry="13" fill="${fond}"/>
+      <ellipse data-body="1" cx="167" cy="266" rx="8" ry="13" fill="${fond}"/>
+
+      <g fill="${articulation}" stroke="${trait}" stroke-opacity=".5" stroke-width="1">
+        <circle data-body="1" cx="68" cy="96" r="8"/><circle data-body="1" cx="132" cy="96" r="8"/>
+        <circle data-body="1" cx="86" cy="204" r="9"/><circle data-body="1" cx="114" cy="204" r="9"/>
+        <circle data-body="1" cx="50" cy="184" r="7"/><circle data-body="1" cx="150" cy="184" r="7"/>
+        <circle data-body="1" cx="36" cy="252" r="5"/><circle data-body="1" cx="164" cy="252" r="5"/>
+        <circle data-body="1" cx="86" cy="290" r="8"/><circle data-body="1" cx="114" cy="290" r="8"/>
+        <circle data-body="1" cx="90" cy="382" r="5"/><circle data-body="1" cx="110" cy="382" r="5"/>
+      </g>
+
+      ${dos
+        ? `<path d="M100 84 L100 200" stroke="${trait}" stroke-width="1.6" stroke-dasharray="2 4" stroke-linecap="round" opacity=".7" pointer-events="none"/>
+           <path d="M80 118 Q100 124 120 118" fill="none" stroke="${trait}" stroke-width="1" opacity=".5" pointer-events="none"/>`
+        : `<path d="M100 96 L100 122" stroke="${trait}" stroke-width="1.4" stroke-linecap="round" opacity=".6" pointer-events="none"/>
+           <path d="M80 116 C90 124 96 124 100 118 C104 124 110 124 120 116" fill="none" stroke="${trait}" stroke-width="1.6" stroke-linecap="round" opacity=".7" pointer-events="none"/>
+           <path d="M84 160 Q100 163 116 160" fill="none" stroke="${trait}" stroke-width="1" opacity=".45" pointer-events="none"/>
+           <path d="M112 114 C104 108 102 103 105 100 C108 97 111 99 112 102 C113 99 116 97 119 100 C122 103 120 108 112 114 Z" fill="#ff5a72" opacity=".75" pointer-events="none"/>`}
+      <g pointer-events="none" fill="none" stroke="${trait}" stroke-width="1.2" stroke-linecap="round" opacity=".55">${dos
+        ? `<path d="M86 110 Q100 122 114 110"/>
+           <path d="M80 126 Q90 150 96 178"/><path d="M120 126 Q110 150 104 178"/>
+           <path d="M84 112 Q80 124 90 132"/><path d="M116 112 Q120 124 110 132"/>
+           <path d="M92 186 Q94 190 92 194"/><path d="M108 186 Q106 190 108 194"/>
+           <path d="M86 202 Q100 218 114 202"/>
+           <path d="M58 130 Q55 150 58 170"/><path d="M142 130 Q145 150 142 170"/>
+           <path d="M86 312 Q83 340 90 356"/><path d="M114 312 Q117 340 110 356"/>
+           <path d="M90 228 Q88 256 90 282"/><path d="M110 228 Q112 256 110 282"/>`
+        : `<path d="M93 46 Q96 44 98 46"/><path d="M102 46 Q104 44 107 46"/>
+           <path d="M100 50 L98 60 Q100 62 102 60"/>
+           <path d="M93 68 Q100 71 107 68"/>
+           <path d="M80 118 C86 110 96 112 100 118 C104 112 114 110 120 118 C116 128 104 130 100 124 C96 130 84 128 80 118 Z"/>
+           <path d="M100 128 L100 170"/>
+           <path d="M90 140 Q100 143 110 140"/><path d="M90 154 Q100 157 110 154"/><path d="M92 168 Q100 170 108 168"/>
+           <path d="M70 92 Q64 102 70 110"/><path d="M130 92 Q136 102 130 110"/>
+           <path d="M80 150 Q86 166 84 180"/><path d="M120 150 Q114 166 116 180"/>
+           <path d="M58 124 Q54 142 56 156"/><path d="M142 124 Q146 142 144 156"/>
+           <path d="M92 236 Q88 262 88 284"/><path d="M108 236 Q112 262 112 284"/>
+           <path d="M96 300 Q94 330 92 360"/><path d="M104 300 Q106 330 108 360"/>`}</g>
+    </g>
+
+    <rect x="60" y="392" width="80" height="0" fill="none"/>
+    <text x="100" y="402" text-anchor="middle" fill="#e8e4ee" font-size="13" font-family="system-ui" font-weight="600" letter-spacing="2" pointer-events="none">${dos ? "DE DOS" : "DE FACE"}</text>
+  `;
+  renderPoints();
+}
+
+function renderPoints() {
+  corpsSvg.querySelectorAll("[data-point]").forEach(n => n.remove());
+  pts.filter(p => p.vue === vueCorps).forEach(p => {
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", p.x);
+    c.setAttribute("cy", p.y);
+    c.setAttribute("r", 8);
+    c.setAttribute("fill", NIVEAUX[p.niveau].couleur);
+    c.setAttribute("stroke", "#fff");
+    c.setAttribute("stroke-width", "2");
+    c.setAttribute("data-point", String(p.id));
+    c.setAttribute("role", "button");
+    c.setAttribute("aria-label", "Point, douleur " + NIVEAUX[p.niveau].nom);
+    c.style.cursor = "grab";
+    corpsSvg.appendChild(c);
+  });
+}
+
+function posCorps(e) {
+  const pt = corpsSvg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const q = pt.matrixTransform(corpsSvg.getScreenCTM().inverse());
+  return {
+    x: Math.round(Math.min(200, Math.max(0, q.x)) * 10) / 10,
+    y: Math.round(Math.min(410, Math.max(0, q.y)) * 10) / 10
+  };
+}
+
+corpsSvg.addEventListener("pointerdown", e => {
+  const cible = e.target;
+  const p = posCorps(e);
+  const pointCible = cible.closest ? cible.closest("[data-point]") : null;
+  if (pointCible) {
+    const pt = pts.find(x => String(x.id) === pointCible.dataset.point);
+    if (!pt) return;
+    glisse = { pt: pt, depart: p, bouge: false };
+    corpsSvg.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    return;
+  }
+  if (cible.closest && cible.closest("[data-body]")) {
+    pts.push({ id: nextPtId++, vue: vueCorps, x: p.x, y: p.y, niveau: 0 });
+    renderPoints();
+    renderResumeCorps();
+  }
+});
+corpsSvg.addEventListener("pointermove", e => {
+  if (!glisse) return;
+  const p = posCorps(e);
+  if (!glisse.bouge && Math.hypot(p.x - glisse.depart.x, p.y - glisse.depart.y) > 4) glisse.bouge = true;
+  if (glisse.bouge) {
+    glisse.pt.x = p.x;
+    glisse.pt.y = p.y;
+    renderPoints();
+  }
+});
+function finirGlisse() {
+  if (!glisse) return;
+  if (!glisse.bouge) {
+    const pt = glisse.pt;
+    if (pt.niveau < NIVEAUX.length - 1) pt.niveau++;
+    else pts = pts.filter(x => x !== pt);
+  }
+  glisse = null;
+  renderPoints();
+  renderResumeCorps();
+}
+corpsSvg.addEventListener("pointerup", finirGlisse);
+corpsSvg.addEventListener("pointercancel", () => { glisse = null; renderPoints(); });
+
+function renderLegendeCorps() {
+  const el = document.getElementById("corps-legende");
+  el.innerHTML = "";
+  NIVEAUX.forEach(n => {
+    const c = document.createElement("span");
+    c.className = "chip";
+    const pastille = document.createElement("span");
+    pastille.style.cssText = "display:inline-block;width:14px;height:14px;border-radius:50%;background:" + n.couleur;
+    c.append(pastille, document.createTextNode(n.nom));
+    el.appendChild(c);
+  });
+}
+function renderResumeCorps() {
+  const visibles = pts.filter(p => p.vue === vueCorps);
+  document.getElementById("corps-resume").textContent = visibles.length
+    ? visibles.map((p, i) => "Point " + (i + 1) + " : près de " + repereProche(p.x, p.y) + " (" + NIVEAUX[p.niveau].nom + ")").join(" · ")
+    : "Aucun point marqué sur cette vue.";
+}
+function renderHistCorps() {
+  const h = document.getElementById("hist-corps");
+  h.innerHTML = "";
+  const list = loadKey(KEY_CORPS).slice(-10).reverse();
+  if (!list.length) { h.textContent = "Rien encore."; return; }
+  list.forEach(e => {
+    const li = document.createElement("li");
+    const d = new Date(e.date).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+    li.textContent = d + " · vue " + (e.vue === "dos" ? "de dos" : "de face") + " · " +
+      (e.points || e.zones || []).map(p => p.zone + " (" + p.niveau + ")").join(", ");
+    h.appendChild(li);
+  });
+}
+
+const vueEl = document.getElementById("corps-vue");
+btn("De face", vueEl, b => { pressOnly(vueEl, b); vueCorps = "devant"; dessinerCorps(); renderResumeCorps(); });
+btn("De dos", vueEl, b => { pressOnly(vueEl, b); vueCorps = "dos"; dessinerCorps(); renderResumeCorps(); });
+pressOnly(vueEl, vueEl.querySelector("button"));
+
+document.getElementById("corps-save").addEventListener("click", () => {
+  const msg = document.getElementById("msg-corps");
+  const visibles = pts.filter(p => p.vue === vueCorps);
+  if (!visibles.length) { msg.textContent = "Pose au moins un point."; return; }
+  const entry = {
+    date: new Date().toISOString(),
+    ...reponsesDouleur(),
+    vue: vueCorps,
+    points: visibles.map(p => ({ zone: repereProche(p.x, p.y), niveau: NIVEAUX[p.niveau].nom, x: p.x, y: p.y }))
+  };
+  const list = loadKey(KEY_CORPS);
+  list.push(entry);
+  msg.textContent = persistKey(KEY_CORPS, list) ? "Point enregistré." : "Impossible d'enregistrer ici.";
+  renderHistCorps();
+});
+document.getElementById("corps-clear").addEventListener("click", () => {
+  pts = pts.filter(p => p.vue !== vueCorps);
+  renderPoints();
+  renderResumeCorps();
+  document.getElementById("msg-corps").textContent = "Effacé.";
+});
+
+renderLegendeCorps();
+dessinerCorps();
+renderResumeCorps();
+renderHistCorps();
+
+/* Aide pour nommer la douleur */
+const TYPES_DOULEUR = [
+  ["Piquante", "comme une aiguille ou un coup bref"],
+  ["Brûlante", "comme une chaleur ou une brûlure"],
+  ["Sourde", "lourde, qui reste, diffuse"],
+  ["Qui tire", "qui part dans une direction"],
+  ["Qui pulse", "qui bat, au rythme du cœur"],
+  ["Engourdie", "perte de sensation ou fourmillements"],
+  ["Une gêne", "pas vraiment douloureux, mais ça gêne"]
+];
+let typeDouleur = null;
+const typesEl = document.getElementById("types-douleur");
+TYPES_DOULEUR.forEach(([nom, desc]) => btn(nom, typesEl, b => {
+  if (typeDouleur === nom) {
+    typeDouleur = null;
+    b.setAttribute("aria-pressed", "false");
+    document.getElementById("type-choisi").textContent = "";
+    return;
+  }
+  pressOnly(typesEl, b);
+  typeDouleur = nom;
+  document.getElementById("type-choisi").textContent = nom + " : " + desc;
+}));
+
+/* Questions du bilan douleur */
+const CHOIX_DOULEUR = {
+  duree: ["Moins d'une semaine", "1 à 4 semaines", "1 à 3 mois", "Plus de 3 mois", "Je ne sais pas"],
+  frequence: ["Tout le temps", "Par moments", "Après un effort ou une position", "Je ne sais pas"],
+  profondeur: ["En surface (peau, muscles)", "En profondeur (dans le corps)", "Je ne sais pas"],
+  impact: ["Un peu", "Beaucoup", "Pas du tout"],
+  signes: ["Gonflement", "Rougeur", "Chaleur", "Fièvre", "Engourdissement", "Fourmillements", "Aucun"]
+};
+const reponsesDouleurEtat = { duree: null, frequence: null, profondeur: null, impact: null, signes: new Set(), intensite: null, aggrave: "" };
+
+function majAlerteDouleur() {
+  const r = reponsesDouleurEtat;
+  const alerte = (r.intensite !== null && r.intensite >= 8) || r.signes.has("Fièvre") || r.signes.has("Gonflement") || r.signes.has("Rougeur");
+  const el = document.getElementById("q-alerte");
+  el.hidden = !alerte;
+  el.textContent = "Si la douleur est forte, apparaît après un choc, ou s'accompagne de fièvre, de gonflement ou de rougeur, parle-en à un médecin rapidement.";
+}
+
+function choixUniqueDouleur(id, liste, cle) {
+  const el = document.getElementById(id);
+  liste.forEach(nom => btn(nom, el, b => {
+    if (reponsesDouleurEtat[cle] === nom) {
+      reponsesDouleurEtat[cle] = null;
+      b.setAttribute("aria-pressed", "false");
+    } else {
+      pressOnly(el, b);
+      reponsesDouleurEtat[cle] = nom;
+    }
+    majAlerteDouleur();
+  }));
+}
+choixUniqueDouleur("q-duree", CHOIX_DOULEUR.duree, "duree");
+choixUniqueDouleur("q-frequence", CHOIX_DOULEUR.frequence, "frequence");
+choixUniqueDouleur("q-profondeur", CHOIX_DOULEUR.profondeur, "profondeur");
+choixUniqueDouleur("q-impact", CHOIX_DOULEUR.impact, "impact");
+
+const signesEl = document.getElementById("q-signes");
+CHOIX_DOULEUR.signes.forEach(nom => btn(nom, signesEl, b => {
+  if (reponsesDouleurEtat.signes.has(nom)) {
+    reponsesDouleurEtat.signes.delete(nom);
+    b.setAttribute("aria-pressed", "false");
+  } else {
+    reponsesDouleurEtat.signes.add(nom);
+    b.setAttribute("aria-pressed", "true");
+  }
+  majAlerteDouleur();
+}));
+
+const curseurDouleur = document.getElementById("q-intensite");
+curseurDouleur.addEventListener("input", () => {
+  reponsesDouleurEtat.intensite = Number(curseurDouleur.value);
+  document.getElementById("q-intensite-val").textContent = curseurDouleur.value;
+  majAlerteDouleur();
+});
+document.getElementById("q-aggrave").addEventListener("input", e => {
+  reponsesDouleurEtat.aggrave = e.target.value.trim();
+});
+
+function reponsesDouleur() {
+  const r = reponsesDouleurEtat;
+  return {
+    type: typeDouleur,
+    duree: r.duree,
+    frequence: r.frequence,
+    intensite: r.intensite,
+    aggrave: r.aggrave,
+    profondeur: r.profondeur,
+    impact: r.impact,
+    signes: [...r.signes]
+  };
+}
+
+document.getElementById("aide-douleur-ancien").addEventListener("click", async () => {
+  const out = document.getElementById("out-douleur");
+  const bouton = document.getElementById("aide-douleur");
+  out.hidden = false;
+  if (!sampleFn) { out.textContent = "Cette aide n'est pas disponible ici."; return; }
+  const prompt =
+    "Tu aides une personne neuroatypique à nommer une douleur qu'elle a du mal à identifier. " +
+    "Réponds en français, avec des mots simples et des exemples concrets. Pose une seule question à la fois. " +
+    "Ne pose aucun diagnostic. Si la personne décrit une douleur forte, après un choc, avec fièvre, gonflement ou rougeur, " +
+    "dis-lui de voir un médecin rapidement. Si elle demande ce qu'est un type de douleur, explique-le simplement avec un exemple concret (piquante, brûlante, sourde, qui tire, qui pulse, engourdie, une gêne). Type choisi jusqu'ici : " + (typeDouleur || "aucun") + ".";
+  bouton.disabled = true;
+  out.textContent = "Réflexion…";
+  try {
+    await sampleFn(prompt, {
+      cache: false,
+      modelTier: "quick",
+      onText: ({ text }) => { out.textContent = text; }
+    });
+  } catch (e) {
+    if (e && e.code === "not_granted") { sampleFn = null; out.textContent = "Accès refusé."; }
+    else if (e && e.code === "rate_limited") { out.textContent = "Trop de demandes pour l'instant, réessaie dans un moment."; }
+    else { out.textContent = e && e.text ? e.text : "Claude n'a pas pu répondre."; }
+  } finally {
+    bouton.disabled = false;
+  }
+});
+
+/* ---------- Bilan ---------- */
+const PERIODES = [["15 derniers jours", 15], ["30 derniers jours", 30], ["Tout", 0]];
+let periodeJours = 15;
+let periodeLabel = PERIODES[0][0];
+function depuis(list) {
+  if (!periodeJours) return list;
+  const limite = Date.now() - periodeJours * 86400000;
+  return list.filter(e => new Date(e.date).getTime() >= limite);
+}
+function compte(arr) { const m = {}; arr.forEach(v => { if (v) m[v] = (m[v] || 0) + 1; }); return m; }
+function topTxt(m, n) {
+  const t = Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => k + " (" + v + "×)");
+  return t.length ? t.join(", ") : "–";
+}
+function moyenne(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null; }
+function fmtMoy(v) { return v === null ? "–" : formatDuree(Math.round(v)); }
+function fill(id, lines) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  lines.forEach(t => { const p = document.createElement("p"); p.style.margin = "4px 0"; p.textContent = t; el.appendChild(p); });
+}
+function renderPeriodes() {
+  const el = document.getElementById("periode");
+  el.innerHTML = "";
+  PERIODES.forEach(([label, j]) => btn(label, el, b => { pressOnly(el, b); periodeJours = j; periodeLabel = label; renderBilan(); }));
+  pressOnly(el, el.querySelector("button"));
+}
+function renderBilan() {
+  const emo = depuis(loadKey(KEY));
+  const son = depuis(loadKey(KEY_SLEEP));
+  const emoL = [
+    emo.length + " entrée(s) d'émotions",
+    "Ressenti : " + topTxt(compte(emo.map(e => e.ressenti)), 5),
+    "Batterie sociale : " + topTxt(compte(emo.map(e => e.batterie && e.batterie.label)), 5),
+    "Raisons les plus citées : " + topTxt(compte(emo.flatMap(e => e.raisons)), 5),
+    "Mots les plus choisis : " + topTxt(compte(emo.map(e => e.mot)), 3)
+  ];
+  const estime = son.map(e => Math.max(0, e.dureeMin - e.latence - e.reveils.reduce((s, r) => s + r.duree, 0)));
+  const moyReveils = moyenne(son.map(e => e.reveils.length));
+  const moyLatence = moyenne(son.map(e => e.latence));
+  const sonL = [
+    son.length + " nuit(s) notée(s)",
+    "Durée au lit moyenne : " + fmtMoy(moyenne(son.map(e => e.dureeMin))),
+    "Sommeil estimé moyen : " + fmtMoy(moyenne(estime)),
+    "Temps moyen pour s'endormir : " + (moyLatence === null ? "–" : Math.round(moyLatence) + " min"),
+    "Réveils par nuit en moyenne : " + (moyReveils === null ? "–" : moyReveils.toFixed(1)),
+    "Récupération : " + topTxt(compte(son.map(e => e.recup)), 5)
+  ];
+  fill("bilan-emo", emoL);
+  fill("bilan-sommeil", sonL);
+  document.getElementById("bilan-texte").value =
+    "Bilan — " + periodeLabel + "\n\nÉMOTIONS\n- " + emoL.join("\n- ") +
+    "\n\nSOMMEIL\n- " + sonL.join("\n- ") +
+    bilanAutresTexte() + "\n\nCe bilan résume des notes personnelles. Il ne pose aucun diagnostic.";
+}
+document.getElementById("copier").addEventListener("click", async () => {
+  const ta = document.getElementById("bilan-texte");
+  const msg = document.getElementById("msg-copie");
+  try { await navigator.clipboard.writeText(ta.value); msg.textContent = "Copié."; }
+  catch (e) { ta.removeAttribute("readonly"); ta.select(); msg.textContent = "Sélectionne le texte et copie-le."; }
+});
+
+renderHist();
+renderSleepHist();
+renderPeriodes();
+renderBilan();
+renderRoutines();
+
+/* ---------- Eau ---------- */
+const KEY_EAU = "eau-beta";
+const KEY_EAU_CONF = "eau-config-beta";
+const EAU_RAPIDES = [100, 200, 250, 500];
+function loadEauConf() {
+  const defaut = { objectif: 2000, rappelActif: false, intervalle: 60 };
+  try { return Object.assign(defaut, JSON.parse(localStorage.getItem(KEY_EAU_CONF) || "{}")); }
+  catch (e) { return defaut; }
+}
+function saveEauConf(c) {
+  try { localStorage.setItem(KEY_EAU_CONF, JSON.stringify(c)); } catch (e) {}
+}
+let eauConf = loadEauConf();
+let rappelEauDernier = 0;
+
+function eauDuJour() {
+  const auj = new Date().toDateString();
+  return loadKey(KEY_EAU).filter(e => new Date(e.date).toDateString() === auj);
+}
+function formatMl(ml) { return ml.toLocaleString("fr-FR") + " ml"; }
+function ajouterEau(ml) {
+  const l = loadKey(KEY_EAU);
+  l.push({ date: new Date().toISOString(), ml: ml });
+  persistKey(KEY_EAU, l);
+  renderEau();
+}
+function annulerDernierEau() {
+  const l = loadKey(KEY_EAU);
+  const auj = new Date().toDateString();
+  let i = l.length - 1;
+  while (i >= 0 && new Date(l[i].date).toDateString() !== auj) i--;
+  if (i >= 0) { l.splice(i, 1); persistKey(KEY_EAU, l); }
+  renderEau();
+}
+function renderEau() {
+  const list = eauDuJour();
+  const total = list.reduce((s, e) => s + e.ml, 0);
+  const obj = eauConf.objectif;
+  document.getElementById("eau-total").textContent = formatMl(total) + " sur " + formatMl(obj);
+  document.getElementById("eau-barre").style.width = Math.min(100, Math.round(total / obj * 100)) + "%";
+  const j = document.getElementById("eau-journal");
+  j.innerHTML = "";
+  if (!list.length) { j.textContent = "Rien encore aujourd'hui."; }
+  list.slice().reverse().forEach(e => {
+    const li = document.createElement("li");
+    li.textContent = new Date(e.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + " · " + formatMl(e.ml);
+    j.appendChild(li);
+  });
+  document.getElementById("eau-objectif-jour").textContent = "Objectif du jour : " + (obj / 1000).toString().replace(".", ",") + " L";
+  const atteint = total >= obj;
+  document.getElementById("eau-message").textContent = atteint ? "Bravo, ton objectif a été atteint. C'est bien, continue comme ça." : "";
+  const valider = document.getElementById("eau-valider");
+  const valide = jourEauValide();
+  valider.hidden = !atteint;
+  valider.textContent = valide ? "Objectif validé pour aujourd'hui ✓" : "Valider l'objectif";
+  valider.disabled = valide;
+  const repereValider = document.getElementById("repere-valider");
+  if (repereValider) {
+    repereValider.textContent = valide ? "Objectif du jour enregistré ✓" : "Valider l'objectif du jour";
+    repereValider.disabled = valide;
+  }
+  const bilan = document.getElementById("eau-bilan-jour");
+  if (new Date().getHours() >= 20) {
+    bilan.textContent = total >= obj
+      ? "Tu as atteint ton repère aujourd'hui. Bravo."
+      : "Tu as bu " + formatMl(total) + " aujourd'hui. Ça peut suffire, ou non : c'est juste une info, pas un jugement.";
+  } else {
+    bilan.textContent = "";
+  }
+}
+
+EAU_RAPIDES.forEach(ml => btn("+" + ml + " ml", document.getElementById("eau-rapides"), () => ajouterEau(ml)));
+document.getElementById("eau-annuler").addEventListener("click", annulerDernierEau);
+
+const objectifEl = document.getElementById("eau-objectif");
+objectifEl.value = (eauConf.objectif / 1000).toString();
+objectifEl.addEventListener("change", () => {
+  const litres = Number(objectifEl.value);
+  if (litres > 0) {
+    eauConf.objectif = Math.round(litres * 1000);
+    saveEauConf(eauConf);
+    renderEau();
+  }
+});
+
+const rappelEauEl = document.getElementById("eau-rappel-actif");
+const intervalleEl = document.getElementById("eau-intervalle");
+rappelEauEl.checked = !!eauConf.rappelActif;
+intervalleEl.value = String(eauConf.intervalle);
+rappelEauEl.addEventListener("change", () => {
+  eauConf.rappelActif = rappelEauEl.checked;
+  rappelEauDernier = Date.now();
+  saveEauConf(eauConf);
+});
+intervalleEl.addEventListener("change", () => {
+  eauConf.intervalle = Number(intervalleEl.value);
+  saveEauConf(eauConf);
+});
+
+function verifierRappelEau() {
+  if (!eauConf.rappelActif) return;
+  const h = new Date().getHours();
+  if (h < 9 || h >= 20) return;
+  if (!rappelBanner.hidden) return;
+  if (Date.now() - rappelEauDernier < eauConf.intervalle * 60000) return;
+  rappelEauDernier = Date.now();
+  document.getElementById("rappel-texte").textContent = "Pense à boire un verre d'eau.";
+  const ouvrir = document.getElementById("rappel-ouvrir");
+  ouvrir.textContent = "J'ai bu 250 ml";
+  ouvrir.onclick = () => { ajouterEau(250); cacherRappel(); };
+  document.getElementById("rappel-plus-tard").onclick = cacherRappel;
+  rappelBanner.hidden = false;
+  void rappelBanner.offsetWidth;
+  rappelBanner.classList.add("montre");
+}
+const KEY_EAU_VALIDE = "eau-valide-beta";
+const KEY_VESSIE = "vessie-beta";
+function jourEauValide() {
+  try { return JSON.parse(localStorage.getItem(KEY_EAU_VALIDE) || "[]").includes(new Date().toDateString()); }
+  catch (e) { return false; }
+}
+function validerObjectifJour() {
+  try {
+    const l = JSON.parse(localStorage.getItem(KEY_EAU_VALIDE) || "[]");
+    const j = new Date().toDateString();
+    if (!l.includes(j)) l.push(j);
+    localStorage.setItem(KEY_EAU_VALIDE, JSON.stringify(l));
+  } catch (e) {}
+  renderEau();
+}
+document.getElementById("eau-valider").addEventListener("click", validerObjectifJour);
+document.getElementById("repere-valider").addEventListener("click", validerObjectifJour);
+document.getElementById("vers-vessie").addEventListener("click", () => show("vessie"));
+document.getElementById("vers-eau").addEventListener("click", () => show("hydratation"));
+
+/* Ancien journal vessie, désactivé */
+if (false) {
+let brulureChoisie = null;
+const BRULURES = ["Non", "Oui, une douleur ou une brûlure", "Envie très urgente"];
+const brulureEl = document.getElementById("vessie-brulure");
+BRULURES.forEach(nom => btn(nom, brulureEl, b => {
+  if (brulureChoisie === nom) {
+    brulureChoisie = null;
+    b.setAttribute("aria-pressed", "false");
+  } else {
+    pressOnly(brulureEl, b);
+    brulureChoisie = nom;
+  }
+  document.getElementById("vessie-alerte").hidden = brulureChoisie !== "Oui, une douleur ou une brûlure";
+}));
+function renderVessie() {
+  const j = document.getElementById("vessie-journal");
+  const l = loadKey(KEY_VESSIE).slice(-15).reverse();
+  j.innerHTML = "";
+  if (!l.length) { j.textContent = "Rien encore."; return; }
+  l.forEach(e => {
+    const li = document.createElement("li");
+    li.textContent = new Date(e.date).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) + (e.brulure ? " · " + e.brulure : "");
+    j.appendChild(li);
+  });
+}
+document.getElementById("vessie-ajouter").addEventListener("click", () => {
+  const l = loadKey(KEY_VESSIE);
+  l.push({ date: new Date().toISOString(), brulure: brulureChoisie });
+  persistKey(KEY_VESSIE, l);
+  brulureChoisie = null;
+  brulureEl.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", "false"));
+  document.getElementById("vessie-alerte").hidden = true;
+  renderVessie();
+});
+renderVessie();
+}
+
+/* Vessie : une question à la fois, dans une seule carte */
+let vessieEtape = "repos";
+let vessieTemp = {};
+let vessieMessage = "";
+let vessieDecalage = 0;
+const carteVessie = document.getElementById("vessie-carte");
+
+function bouton(label, classe, action) {
+  const b = document.createElement("button");
+  b.type = "button";
+  if (classe) b.className = classe;
+  b.textContent = label;
+  b.addEventListener("click", action);
+  return b;
+}
+function infoVessie(e) {
+  return {
+    urgente: !!e.urgente,
+    douleur: e.douleur !== undefined ? !!e.douleur : String(e.brulure || "").indexOf("Oui") === 0
+  };
+}
+function mictionsDuJour(date) {
+  const j = new Date(date).toDateString();
+  return loadKey(KEY_VESSIE).filter(e => new Date(e.date).toDateString() === j);
+}
+function jourTexte(d) {
+  return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+}
+function lundiDe(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d;
+}
+function enregistrerMiction() {
+  const l = loadKey(KEY_VESSIE);
+  l.push({ date: new Date().toISOString(), urgente: !!vessieTemp.urgente, douleur: !!vessieTemp.douleur });
+  persistKey(KEY_VESSIE, l);
+  vessieMessage = vessieTemp.douleur ? "Une douleur en urinant mérite un avis médical rapidement." : "Enregistré.";
+  vessieTemp = {};
+  vessieEtape = "repos";
+  afficherEtapeVessie();
+  renderSemaineVessie();
+  renderBilanVessie();
+}
+function afficherEtapeVessie() {
+  carteVessie.innerHTML = "";
+  animerCarte(carteVessie);
+  const h = document.createElement("h2");
+  const sous = document.createElement("p");
+  sous.className = "muted";
+  sous.style.margin = "0 0 10px";
+  const zone = document.createElement("div");
+  zone.className = "opts";
+  carteVessie.append(h, sous, zone);
+  if (vessieEtape === "repos") {
+    h.textContent = "J'ai uriné";
+    sous.textContent = "Appuie à chaque fois. Tu peux le noter autant de fois que besoin dans la journée.";
+    zone.appendChild(bouton("J'ai urié", "primary", () => { vessieEtape = "urgente"; vessieMessage = ""; afficherEtapeVessie(); }));
+    if (vessieMessage) {
+      const m = document.createElement("p");
+      m.style.margin = "10px 0 0";
+      m.style.fontWeight = "600";
+      m.textContent = vessieMessage;
+      carteVessie.appendChild(m);
+    }
+  } else if (vessieEtape === "urgente") {
+    h.textContent = "Était-ce une envie très urgente ?";
+    sous.textContent = "Une envie qui ne peut pas attendre.";
+    zone.appendChild(bouton("Oui", "", () => { vessieTemp.urgente = true; vessieEtape = "douleur"; afficherEtapeVessie(); }));
+    zone.appendChild(bouton("Non", "", () => { vessieTemp.urgente = false; vessieEtape = "douleur"; afficherEtapeVessie(); }));
+  } else {
+    h.textContent = "As-tu eu une douleur en urinant ?";
+    sous.textContent = "Une douleur ou une brûlure.";
+    zone.appendChild(bouton("Oui", "", () => { vessieTemp.douleur = true; enregistrerMiction(); }));
+    zone.appendChild(bouton("Non", "", () => { vessieTemp.douleur = false; enregistrerMiction(); }));
+  }
+}
+
+function renderSemaineVessie() {
+  const debut = lundiDe(new Date());
+  debut.setDate(debut.getDate() + vessieDecalage * 7);
+  const fin = new Date(debut);
+  fin.setDate(fin.getDate() + 6);
+  document.getElementById("vessie-semaine-titre").textContent = "Semaine du " + jourTexte(debut) + " au " + jourTexte(fin);
+  document.getElementById("vessie-semaine-suiv").disabled = vessieDecalage >= 0;
+  const ul = document.getElementById("vessie-semaine");
+  ul.innerHTML = "";
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(debut);
+    d.setDate(d.getDate() + i);
+    const infos = mictionsDuJour(d).map(infoVessie);
+    const urg = infos.filter(x => x.urgente).length;
+    const dou = infos.filter(x => x.douleur).length;
+    const li = document.createElement("li");
+    li.textContent = jourTexte(d) + " · " + (infos.length ? infos.length + " fois" : "rien noté") +
+      (urg ? " · " + urg + " urgente(s)" : "") +
+      (dou ? " · " + dou + " avec douleur" : "");
+    ul.appendChild(li);
+  }
+}
+
+function renderBilanVessie() {
+  const panneau = document.getElementById("vessie-bilan");
+  if (new Date().getHours() < 20) { panneau.hidden = true; return; }
+  panneau.hidden = false;
+  const infos = mictionsDuJour(new Date()).map(infoVessie);
+  const n = infos.length;
+  const dou = infos.filter(x => x.douleur).length;
+  let texte;
+  if (n === 0) texte = "Aucune miction notée aujourd'hui.";
+  else if (n < 4) texte = n + " fois aujourd'hui : en dessous du repère indicatif.";
+  else if (n <= 7) texte = n + " fois aujourd'hui : dans le repère indicatif.";
+  else texte = n + " fois aujourd'hui : au-dessus du repère indicatif.";
+  texte += " Repère indicatif : environ 4 à 7 fois par jour, selon l'eau bue.";
+  if (dou) texte += " Tu as noté une douleur en urinant : parle-en à un médecin rapidement.";
+  else if (n > 7) texte += " Si c'est souvent comme ça, parle-en à un médecin.";
+  texte += " Ce bilan n'est pas un diagnostic.";
+  document.getElementById("vessie-bilan-texte").textContent = texte;
+}
+
+document.getElementById("vessie-semaine-prec").addEventListener("click", () => { vessieDecalage--; renderSemaineVessie(); });
+document.getElementById("vessie-semaine-suiv").addEventListener("click", () => { if (vessieDecalage < 0) { vessieDecalage++; renderSemaineVessie(); } });
+document.getElementById("vers-eau-2").addEventListener("click", () => show("hydratation"));
+afficherEtapeVessie();
+renderSemaineVessie();
+renderBilanVessie();
+setInterval(renderBilanVessie, 60000);
+
+/* Animation des cartes de questions */
+function animerCarte(el) {
+  el.classList.remove("q-enter");
+  void el.offsetWidth;
+  el.classList.add("q-enter");
+}
+
+/* Une question à la fois : moteur commun (sommeil, corps) */
+function lancerQuestions(el, etapes, fin) {
+  const inseres = {};
+  const pile = [];
+  const reponses = {};
+  let i = 0;
+  function montrer() {
+    const et = etapes[i];
+    el.innerHTML = "";
+    animerCarte(el);
+    const h = document.createElement("h2");
+    h.textContent = et.titre;
+    el.appendChild(h);
+    if (et.aide) {
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.style.margin = "0 0 10px";
+      p.textContent = et.aide;
+      el.appendChild(p);
+    }
+    const zone = document.createElement("div");
+    zone.className = "opts";
+    el.appendChild(zone);
+    et.rendu(zone, valeur => {
+      reponses[et.cle] = valeur;
+      if (et.apres) {
+        etapes.splice(i + 1, inseres[et.cle] || 0);
+        const extra = et.apres(valeur) || [];
+        inseres[et.cle] = extra.length;
+        etapes.splice(i + 1, 0, ...extra);
+      }
+      pile.push(i);
+      i++;
+      if (i < etapes.length) montrer(); else fin(reponses);
+    });
+    if (pile.length) {
+      const retour = bouton("← Question précédente", "", () => { i = pile.pop(); montrer(); });
+      retour.style.marginTop = "12px";
+      el.appendChild(retour);
+    }
+  }
+  montrer();
+}
+function rendChoix(liste, avecPasser) {
+  return (zone, suivant) => {
+    liste.forEach(v => zone.appendChild(bouton(v, "", () => suivant(v))));
+    if (avecPasser) zone.appendChild(bouton("Passer", "", () => suivant(null)));
+  };
+}
+function rendSaisie(type, attrs, avecPasser) {
+  return (zone, suivant) => {
+    const inp = document.createElement("input");
+    inp.type = type;
+    Object.entries(attrs || {}).forEach(([k, v]) => inp.setAttribute(k, v));
+    inp.style.width = "100%";
+    zone.appendChild(inp);
+    zone.appendChild(bouton("Suivant", "primary", () => suivant(inp.value === "" ? null : inp.value)));
+    if (avecPasser) zone.appendChild(bouton("Passer", "", () => suivant(null)));
+  };
+}
+function rendMulti(liste) {
+  return (zone, suivant) => {
+    const choisis = new Set();
+    liste.forEach(v => {
+      const b = bouton(v, "", () => {
+        if (choisis.has(v)) { choisis.delete(v); b.setAttribute("aria-pressed", "false"); }
+        else { choisis.add(v); b.setAttribute("aria-pressed", "true"); }
+      });
+      b.setAttribute("aria-pressed", "false");
+      zone.appendChild(b);
+    });
+    zone.appendChild(bouton("Suivant", "primary", () => suivant([...choisis])));
+  };
+}
+
+/* Sommeil */
+function etapesSommeil() {
+  return [
+    { cle: "coucher", titre: "À quelle heure t'es-tu couché·e ?", rendu: rendSaisie("time") },
+    { cle: "lever", titre: "À quelle heure t'es-tu réveillé·e ?", rendu: rendSaisie("time") },
+    { cle: "latence", titre: "Combien de temps pour t'endormir ?", aide: "En minutes. Tu peux passer si tu ne sais pas.", rendu: rendSaisie("number", { min: "0", max: "600", step: "5" }, true) },
+    { cle: "nbReveils", titre: "Combien de réveils pendant la nuit ?", rendu: rendChoix(["Aucun", "1", "2", "3 ou plus"]),
+      apres: v => {
+        const n = v === "Aucun" ? 0 : v === "1" ? 1 : v === "2" ? 2 : 3;
+        const extra = [];
+        for (let k = 1; k <= n; k++) {
+          extra.push({ cle: "reveil" + k + "h", titre: "Réveil n°" + k + " : à quelle heure ?", rendu: rendSaisie("time") });
+          extra.push({ cle: "reveil" + k + "d", titre: "Réveil n°" + k + " : combien de minutes éveillé·e ?", rendu: rendSaisie("number", { min: "0", max: "600", step: "5" }, true) });
+        }
+        return extra;
+      } },
+    { cle: "recup", titre: "As-tu bien récupéré ?", rendu: rendChoix(RECUP) },
+    { cle: "sensations", titre: "Comment tu te sens au réveil ?", aide: "Tu peux en choisir plusieurs.", rendu: rendMulti(SENSATIONS) }
+  ];
+}
+function renderSleepHistN() {
+  const h = document.getElementById("hist-sleep-n");
+  h.innerHTML = "";
+  const list = loadKey(KEY_SLEEP).slice(-10).reverse();
+  if (!list.length) { h.textContent = "Rien encore."; return; }
+  list.forEach(e => {
+    const li = document.createElement("li");
+    const d = new Date(e.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+    li.textContent = d + " · " + e.coucher + " → " + e.lever + " · " + formatDuree(e.dureeMin) +
+      " · endormissement : " + e.latence + " min · réveils : " + (e.reveils || []).length;
+    h.appendChild(li);
+  });
+}
+function finSommeil(r) {
+  const el = document.getElementById("carte-sommeil");
+  const refaire = () => lancerQuestions(el, etapesSommeil(), finSommeil);
+  if (!r.coucher || !r.lever) {
+    el.innerHTML = "";
+    const p = document.createElement("p");
+    p.textContent = "Il manque l'heure du coucher ou du réveil.";
+    el.appendChild(p);
+    el.appendChild(bouton("Recommencer", "primary", refaire));
+    return;
+  }
+  const reveils = [];
+  for (let k = 1; k <= 3; k++) {
+    if ("reveil" + k + "h" in r) reveils.push({ heure: r["reveil" + k + "h"] || "", duree: Number(r["reveil" + k + "d"]) || 0 });
+  }
+  const entry = {
+    date: new Date().toISOString(),
+    coucher: r.coucher,
+    lever: r.lever,
+    dureeMin: (minutesOf(r.lever) - minutesOf(r.coucher) + 1440) % 1440,
+    latence: Number(r.latence) || 0,
+    reveils: reveils,
+    recup: r.recup || null,
+    sensations: r.sensations || []
+  };
+  const l = loadKey(KEY_SLEEP);
+  l.push(entry);
+  persistKey(KEY_SLEEP, l);
+  el.innerHTML = "";
+  animerCarte(el);
+  const h = document.createElement("h2");
+  h.textContent = "Nuit enregistrée ✓";
+  el.appendChild(h);
+  const p = document.createElement("p");
+  p.className = "muted";
+  p.textContent = "Durée au lit : " + formatDuree(entry.dureeMin) + ".";
+  el.appendChild(p);
+  el.appendChild(bouton("Noter une autre nuit", "primary", refaire));
+  renderSleepHistN();
+}
+
+/* Corps : questions sur la douleur */
+const KEY_DOULEUR = "douleurs-beta";
+function avecAide(rendu, titreBouton, texte) {
+  return (zone, suivant) => {
+    rendu(zone, suivant);
+    zone.appendChild(bouton(titreBouton, "", () => {
+      const existant = zone.querySelector(".aide-bloc");
+      if (existant) { existant.remove(); return; }
+      const bloc = document.createElement("p");
+      bloc.className = "aide-bloc";
+      bloc.style.width = "100%";
+      bloc.style.margin = "8px 0 0";
+      bloc.textContent = texte;
+      zone.appendChild(bloc);
+    }));
+  };
+}
+const DEFINITIONS_DOULEUR = [
+  ["Piquante", "Vive, nette et brève, comme un coup de pointe.", "Exemple : une piqûre d'aiguille, une épine."],
+  ["Brûlante", "Une chaleur ou un feu qui reste.", "Exemple : une main qui a touché une casserole."],
+  ["Sourde", "Lourde et diffuse, difficile à localiser.", "Exemple : une courbature ou un bleu."],
+  ["Qui tire", "Part d'un point et s'étend le long d'une zone ou d'un membre.", "Exemple : une douleur qui descend dans la jambe."],
+  ["Qui pulse", "Des battements, qui suivent le rythme du cœur.", "Exemple : un doigt qui bat après un choc."],
+  ["Engourdie", "Une perte de sensation, ou des fourmillements.", "Exemple : une jambe qui s'endort."],
+  ["Une gêne", "Pas vraiment une douleur, mais quelque chose qui gêne ou limite le mouvement.", "Exemple : une raideur au réveil."]
+];
+function rendTypeDouleur() {
+  const choix = rendChoix(TYPES_DOULEUR.map(t => t[0]), true);
+  return (zone, suivant) => {
+    choix(zone, suivant);
+    zone.appendChild(bouton("Qu'est-ce que ça veut dire ?", "", () => {
+      const existant = zone.querySelector(".definitions");
+      if (existant) { existant.remove(); return; }
+      const bloc = document.createElement("div");
+      bloc.className = "definitions";
+      bloc.style.width = "100%";
+      bloc.style.marginTop = "8px";
+      DEFINITIONS_DOULEUR.forEach(([nom, def, ex]) => {
+        const p = document.createElement("p");
+        p.style.margin = "6px 0";
+        const strong = document.createElement("strong");
+        strong.textContent = nom + " : ";
+        p.append(strong, document.createTextNode(def + " " + ex));
+        bloc.appendChild(p);
+      });
+      zone.appendChild(bloc);
+    }));
+  };
+}
+function etapesDouleur() {
+  return [
+    { cle: "type", titre: "Quel type de douleur ?", aide: "Pas besoin de trouver le bon mot.", rendu: rendTypeDouleur() },
+    { cle: "profondeur", titre: "Ressentie en surface ou en profondeur ?", rendu: avecAide(rendChoix(CHOIX_DOULEUR.profondeur, true), "Comment reconnaître ?", "En surface : tu peux montrer l'endroit précis du doigt, et ça change souvent quand on touche la peau ou qu'on bouge le muscle. En profondeur : c'est plus flou, ça semble venir de l'intérieur (articulation, ventre, poitrine), et ça ne change pas beaucoup quand on touche la peau. Si tu ne sais pas, choisis « Je ne sais pas ».") },
+    { cle: "duree", titre: "Depuis combien de temps ?", rendu: rendChoix(CHOIX_DOULEUR.duree, true) },
+    { cle: "frequence", titre: "Quelle fréquence ?", rendu: rendChoix(CHOIX_DOULEUR.frequence, true) },
+    { cle: "intensite", titre: "Intensité, de 0 à 10", aide: "0 = aucune, 10 = la pire imaginable.", rendu: rendSaisie("number", { min: "0", max: "10", step: "1" }, true) },
+    { cle: "aggrave", titre: "Ce qui aggrave ou soulage", aide: "Ex. bouger, le repos, la chaleur. Tu peux passer.", rendu: rendSaisie("text", {}, true) },
+    { cle: "impact", titre: "Impact sur le sommeil ou les activités", rendu: rendChoix(CHOIX_DOULEUR.impact, true) },
+    { cle: "signes", titre: "Signes associés", aide: "Tu peux en choisir plusieurs.", rendu: rendMulti(CHOIX_DOULEUR.signes) }
+  ];
+}
+function finDouleur(r) {
+  const el = document.getElementById("carte-douleur");
+  typeDouleur = r.type || null;
+  const desc = TYPES_DOULEUR.find(t => t[0] === typeDouleur);
+  const tc = document.getElementById("type-choisi");
+  if (tc) tc.textContent = desc ? typeDouleur + " : " + desc[1] : "";
+  const st = reponsesDouleurEtat;
+  st.profondeur = r.profondeur || null;
+  st.duree = r.duree || null;
+  st.frequence = r.frequence || null;
+  st.intensite = (r.intensite !== null && r.intensite !== undefined && r.intensite !== "") ? Number(r.intensite) : null;
+  st.aggrave = r.aggrave ? String(r.aggrave).trim() : "";
+  st.impact = r.impact || null;
+  st.signes = new Set((r.signes || []).filter(s => s !== "Aucun"));
+  const enregistrements = loadKey(KEY_DOULEUR);
+  enregistrements.push({ date: new Date().toISOString(), type: r.type || null, profondeur: r.profondeur || null, duree: r.duree || null, frequence: r.frequence || null, intensite: st.intensite, aggrave: st.aggrave, impact: r.impact || null, signes: [...st.signes] });
+  persistKey(KEY_DOULEUR, enregistrements);
+  el.innerHTML = "";
+  animerCarte(el);
+  const h = document.createElement("h2");
+  h.textContent = "Réponses prêtes ✓";
+  el.appendChild(h);
+  const p = document.createElement("p");
+  p.className = "muted";
+  p.textContent = "Enregistré pour ton bilan. Tu peux aussi les joindre à ton point avec « Enregistrer ce point », plus bas.";
+  el.appendChild(p);
+  if ((st.intensite !== null && st.intensite >= 8) || st.signes.has("Fièvre") || st.signes.has("Gonflement") || st.signes.has("Rougeur")) {
+    const a = document.createElement("p");
+    a.style.fontWeight = "600";
+    a.textContent = "Si la douleur est forte, apparaît après un choc, ou s'accompagne de fièvre, de gonflement ou de rougeur, parle-en à un médecin rapidement.";
+    el.appendChild(a);
+  }
+  el.appendChild(bouton("Recommencer les questions", "", () => lancerQuestions(el, etapesDouleur(), finDouleur)));
+}
+
+lancerQuestions(document.getElementById("carte-sommeil"), etapesSommeil(), finSommeil);
+lancerQuestions(document.getElementById("carte-douleur"), etapesDouleur(), finDouleur);
+renderSleepHistN();
+
+/* Bilan : corps, eau, vessie */
+function bilanAutresTexte() {
+  try {
+    const bloc = (titre, lignes) => "\n\n" + titre + "\n- " + lignes.join("\n- ");
+    const douleurs = depuis(loadKey(KEY_DOULEUR));
+    const points = depuis(loadKey(KEY_CORPS));
+    const intensites = douleurs.map(e => e.intensite).filter(v => typeof v === "number");
+    const moyIntensite = moyenne(intensites);
+    const corpsL = [
+      douleurs.length + " réponse(s) sur la douleur",
+      "Types : " + topTxt(compte(douleurs.map(e => e.type)), 5),
+      "Surface ou profondeur : " + topTxt(compte(douleurs.map(e => e.profondeur)), 3),
+      "Depuis combien de temps : " + topTxt(compte(douleurs.map(e => e.duree)), 3),
+      "Fréquence : " + topTxt(compte(douleurs.map(e => e.frequence)), 3),
+      "Intensité moyenne : " + (moyIntensite === null ? "–" : moyIntensite.toFixed(1) + " / 10"),
+      "Signes associés : " + topTxt(compte(douleurs.flatMap(e => e.signes || [])), 5),
+      "Points posés sur le corps : " + points.length + " enregistrement(s)",
+      "Zones les plus citées : " + topTxt(compte(points.flatMap(e => (e.points || e.zones || []).map(p => p.zone))), 5)
+    ];
+    const eau = depuis(loadKey(KEY_EAU));
+    const parJour = {};
+    eau.forEach(e => { const j = new Date(e.date).toDateString(); parJour[j] = (parJour[j] || 0) + e.ml; });
+    const jours = Object.keys(parJour);
+    let validees = [];
+    try { validees = JSON.parse(localStorage.getItem(KEY_EAU_VALIDE) || "[]"); } catch (e) {}
+    const nbValidees = validees.filter(j => jours.includes(j)).length;
+    const moyEau = jours.length ? Math.round(jours.reduce((s, j) => s + parJour[j], 0) / jours.length) : null;
+    const eauL = [
+      jours.length + " jour(s) noté(s)",
+      "Total moyen par jour : " + (moyEau === null ? "–" : formatMl(moyEau)),
+      "Objectif validé : " + nbValidees + " jour(s)",
+      "Repère choisi : " + formatMl(eauConf.objectif)
+    ];
+    const vessie = depuis(loadKey(KEY_VESSIE));
+    const infos = vessie.map(infoVessie);
+    const nbJours = new Set(vessie.map(e => new Date(e.date).toDateString())).size;
+    const vessieL = [
+      infos.length + " passage(s) noté(s)",
+      "Jours avec passages : " + nbJours,
+      "Moyenne par jour : " + (nbJours ? (infos.length / nbJours).toFixed(1) : "–"),
+      "Envies très urgentes : " + infos.filter(x => x.urgente).length,
+      "Avec douleur en urinant : " + infos.filter(x => x.douleur).length
+    ];
+    fill("bilan-corps", corpsL);
+    fill("bilan-eau", eauL);
+    fill("bilan-vessie", vessieL);
+    return bloc("CORPS", corpsL) + bloc("EAU", eauL) + bloc("VESSIE", vessieL);
+  } catch (e) {
+    return "";
+  }
+}
+
+/* Réinitialisation des données de test (deux appuis) */
+let resetEnAttente = false;
+document.getElementById("reinitialiser").addEventListener("click", () => {
+  const b = document.getElementById("reinitialiser");
+  if (!resetEnAttente) {
+    resetEnAttente = true;
+    b.textContent = "Appuie encore pour tout effacer";
+    return;
+  }
+  ["checkin-beta", "sommeil-beta", "routines-beta", "routines-historique-beta", "corps-beta", "douleurs-beta", "eau-beta", "eau-valide-beta", "vessie-beta", "rappels-envoyes-beta"]
+    .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+  resetEnAttente = false;
+  b.textContent = "Données effacées : recharge la page";
+  b.disabled = true;
+});
+
+/* À faire : liste personnelle, hors bilan */
+const KEY_TODO = "todo-beta";
+function renderTodo() {
+  const ul = document.getElementById("todo-liste");
+  ul.innerHTML = "";
+  const l = loadKey(KEY_TODO);
+  if (!l.length) {
+    const vide = document.createElement("li");
+    vide.className = "muted";
+    vide.textContent = "Rien à faire pour l'instant.";
+    ul.appendChild(vide);
+    return;
+  }
+  l.forEach((t, i) => {
+    const li = document.createElement("li");
+    li.style.display = "flex";
+    li.style.alignItems = "center";
+    li.style.gap = "10px";
+    li.style.margin = "8px 0";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!t.fait;
+    cb.style.width = "22px";
+    cb.style.height = "22px";
+    cb.setAttribute("aria-label", t.texte);
+    cb.addEventListener("change", () => {
+      const x = loadKey(KEY_TODO);
+      x[i].fait = cb.checked;
+      persistKey(KEY_TODO, x);
+      renderTodo();
+    });
+    const span = document.createElement("span");
+    span.style.flex = "1";
+    span.textContent = t.texte;
+    if (t.fait) { span.style.textDecoration = "line-through"; span.style.opacity = ".6"; }
+    const sup = bouton("Supprimer", "", () => {
+      const x = loadKey(KEY_TODO);
+      x.splice(i, 1);
+      persistKey(KEY_TODO, x);
+      renderTodo();
+    });
+    li.append(cb, span, sup);
+    ul.appendChild(li);
+  });
+}
+function ajouterTodo() {
+  const inp = document.getElementById("todo-nouveau");
+  const texte = inp.value.trim();
+  if (!texte) { inp.focus(); return; }
+  const x = loadKey(KEY_TODO);
+  x.push({ texte: texte, fait: false });
+  persistKey(KEY_TODO, x);
+  inp.value = "";
+  renderTodo();
+}
+document.getElementById("todo-ajouter").addEventListener("click", ajouterTodo);
+document.getElementById("todo-nouveau").addEventListener("keydown", e => { if (e.key === "Enter") ajouterTodo(); });
+renderTodo();
+
+/* À faire : plusieurs catégories, hors bilan */
+const TODO_CATS = {
+  journee: { nom: "Journée", titre: "À faire dans la journée", aide: "Pour te souvenir de petites choses. Pas d'horaire, et ce n'est pas compté dans le bilan.", cle: "todo-beta" },
+  devoirs: { nom: "Devoirs du soir", titre: "Devoirs du soir", aide: "Par quoi commencer ? Mets les choses dans l'ordre avec les flèches : la première est celle à faire en premier.", cle: "todo-devoirs-beta" }
+};
+let todoCat = "journee";
+
+function renderTodoCats() {
+  const el = document.getElementById("t2-categories");
+  el.innerHTML = "";
+  Object.keys(TODO_CATS).forEach(k => {
+    const b = btn(TODO_CATS[k].nom, el, () => { todoCat = k; renderTodoCats(); renderTodoListe(); });
+    if (k === todoCat) b.setAttribute("aria-pressed", "true");
+  });
+}
+function deplacerTodo(i, d) {
+  const c = TODO_CATS[todoCat];
+  const x = loadKey(c.cle);
+  const j = i + d;
+  if (j < 0 || j >= x.length) return;
+  [x[i], x[j]] = [x[j], x[i]];
+  persistKey(c.cle, x);
+  renderTodoListe();
+}
+function renderTodoListe() {
+  const c = TODO_CATS[todoCat];
+  document.getElementById("t2-titre").textContent = c.titre;
+  document.getElementById("t2-aide").textContent = c.aide;
+  const ul = document.getElementById("t2-liste");
+  ul.innerHTML = "";
+  const l = loadKey(c.cle);
+  if (!l.length) {
+    const vide = document.createElement("li");
+    vide.className = "muted";
+    vide.textContent = "Rien pour l'instant.";
+    ul.appendChild(vide);
+    return;
+  }
+  l.forEach((t, i) => {
+    const li = document.createElement("li");
+    li.style.display = "flex";
+    li.style.alignItems = "center";
+    li.style.gap = "8px";
+    li.style.margin = "8px 0";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!t.fait;
+    cb.style.width = "22px";
+    cb.style.height = "22px";
+    cb.setAttribute("aria-label", t.texte);
+    cb.addEventListener("change", () => {
+      const x = loadKey(c.cle);
+      x[i].fait = cb.checked;
+      persistKey(c.cle, x);
+      renderTodoListe();
+    });
+    const span = document.createElement("span");
+    span.style.flex = "1";
+    span.textContent = (todoCat === "devoirs" ? (i + 1) + ". " : "") + t.texte;
+    if (t.fait) { span.style.textDecoration = "line-through"; span.style.opacity = ".6"; }
+    li.append(cb, span);
+    if (todoCat === "devoirs") {
+      li.appendChild(bouton("↑", "", () => deplacerTodo(i, -1)));
+      li.appendChild(bouton("↓", "", () => deplacerTodo(i, 1)));
+    }
+    li.appendChild(bouton("Supprimer", "", () => {
+      const x = loadKey(c.cle);
+      x.splice(i, 1);
+      persistKey(c.cle, x);
+      renderTodoListe();
+    }));
+    ul.appendChild(li);
+  });
+}
+function ajouterTache() {
+  const inp = document.getElementById("t2-nouveau");
+  const texte = inp.value.trim();
+  if (!texte) { inp.focus(); return; }
+  const c = TODO_CATS[todoCat];
+  const x = loadKey(c.cle);
+  x.push({ texte: texte, fait: false });
+  persistKey(c.cle, x);
+  inp.value = "";
+  renderTodoListe();
+}
+document.getElementById("t2-ajouter").addEventListener("click", ajouterTache);
+document.getElementById("t2-nouveau").addEventListener("keydown", e => { if (e.key === "Enter") ajouterTache(); });
+renderTodoCats();
+renderTodoListe();
+
+/* Routines : envoi du rappel vers Google Agenda (ouvre un événement prérempli) */
+function lienGoogleAgenda(r) {
+  const d = new Date();
+  const p2 = n => String(n).padStart(2, "0");
+  const jour = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate());
+  const debut = minutesOf(r.rappel.heure);
+  const fin = Math.min(debut + 20, 1439);
+  const hm = m => p2(Math.floor(m / 60)) + p2(m % 60);
+  const dates = jour + "T" + hm(debut) + "00/" + jour + "T" + hm(fin) + "00";
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: "Routine : " + r.nom,
+    dates: dates,
+    recur: "RRULE:FREQ=DAILY",
+    details: "Rappel de ta routine « " + r.nom + " »."
+  });
+  return "https://calendar.google.com/calendar/render?" + params.toString();
+}
+document.getElementById("gcal-ajouter").addEventListener("click", () => {
+  const r = trouverRoutine(editId);
+  const msg = document.getElementById("msg-rappel");
+  if (!r || !r.rappel) { msg.textContent = "Enregistre d'abord un rappel."; return; }
+  (window.claude ? window.claude.use("downloads") : Promise.resolve(null)).then(async dl => {
+    if (!dl) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([icsRoutine(r)], { type: "text/calendar" }));
+      a.download = "routine-" + r.id + ".ics";
+      document.body.appendChild(a); a.click(); a.remove();
+      msg.textContent = "Fichier prêt : ouvre-le sur ton iPhone pour l'ajouter à Calendrier.";
+      return;
+    }
+    if (!dl) { msg.textContent = "L'enregistrement de fichier n'est pas disponible ici."; return; }
+    try {
+      await dl.save({ filename: "routine-" + r.id + ".ics", data: icsRoutine(r) });
+      msg.textContent = "Fichier prêt : ouvre-le sur ton iPhone pour l'ajouter à Calendrier.";
+    } catch (e) {
+      msg.textContent = "Le fichier n'a pas pu être enregistré.";
+    }
+  });
+
+});
+
+/* Routines : fichier de calendrier (.ics), rappel tous les jours */
+function icsEchapper(s) {
+  return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+}
+function icsRoutine(r) {
+  const d = new Date();
+  const p2 = n => String(n).padStart(2, "0");
+  const jour = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate());
+  const debut = minutesOf(r.rappel.heure);
+  const fin = Math.min(debut + 20, 1439);
+  const hm = m => p2(Math.floor(m / 60)) + p2(m % 60);
+  const maintenant = d.toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  const lignes = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Differents//FR",
+    "BEGIN:VEVENT",
+    "UID:routine-" + r.id + "@check-in",
+    "DTSTAMP:" + maintenant,
+    "DTSTART:" + jour + "T" + hm(debut) + "00",
+    "DTEND:" + jour + "T" + hm(fin) + "00",
+    "RRULE:FREQ=DAILY",
+    "SUMMARY:" + icsEchapper("Routine : " + r.nom),
+    "DESCRIPTION:" + icsEchapper("Rappel de ta routine « " + r.nom + " »."),
+    "BEGIN:VALARM",
+    "TRIGGER:PT0M",
+    "ACTION:DISPLAY",
+    "DESCRIPTION:" + icsEchapper("Routine : " + r.nom),
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ];
+  return lignes.join("\r\n");
+}
+
+setInterval(verifierRappelEau, 60000);
+renderEau();
+</script>
+</body>
+</html>

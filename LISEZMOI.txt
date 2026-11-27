@@ -1,0 +1,13 @@
+MISE EN LIGNE DE DIFFERENTS (GitHub Pages)
+
+1. Crée un compte gratuit sur github.com.
+2. Clique sur « New repository », nomme-le differents, mets-le en Public, puis Create.
+3. Clique sur « uploading an existing file », glisse TOUT le contenu de ce dossier (index.html, manifest.webmanifest, icon-192.png, icon-512.png, dossier images), puis Commit changes.
+4. Va dans Settings > Pages, choisis Branch « main » et dossier « / (root) », puis Save.
+5. Après une minute, le site est à l'adresse https://TON-PSEUDO.github.io/differents/
+6. Sur iPhone : ouvre cette adresse dans Safari, touche le bouton Partager, puis « Sur l'écran d'accueil ». L'icône ouvrira l'app en plein écran.
+
+Limites :
+- Les données restent dans le navigateur de l'appareil. Elles ne sont pas partagées entre Safari et l'icône de l'écran d'accueil.
+- Les aides « Aide-moi à démêler » ne sont pas disponibles sur le site (elles ne marchent que dans Claude).
+- Les notifications en arrière-plan ne fonctionnent pas : les rappels s'affichent seulement quand l'app est ouverte.
