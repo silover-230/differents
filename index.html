@@ -380,6 +380,16 @@
       <div class="card-out" id="out" hidden></div>
     </div>
 
+    <div class="panel p-peri">
+      <h2>Rappels sur ce téléphone</h2>
+      <p class="muted">Autorise les notifications, puis envoie un test pour vérifier qu'elles s'affichent bien.</p>
+      <div class="opts" style="justify-content:space-between">
+        <button type="button" id="rappels-activer">Autoriser les notifications</button>
+        <button type="button" id="rappels-tester">Envoyer un test</button>
+      </div>
+      <p class="muted" id="rappels-msg" style="margin:8px 0 0"></p>
+    </div>
+
 
     <div class="panel p-lav">
       <h2>Historique</h2>
@@ -2913,6 +2923,35 @@ function icsRoutine(r) {
 
 setInterval(verifierRappelEau, 60000);
 renderEau();
+</script>
+<script>
+/* ===== Rappels (notifications) ===== */
+(function () {
+  const msg = () => document.getElementById("rappels-msg");
+  const dire = (t) => { if (msg()) msg().textContent = t; };
+  if (!("serviceWorker" in navigator) || !("Notification" in window)) {
+    window.addEventListener("DOMContentLoaded", () => dire("Les notifications ne sont pas disponibles sur cet appareil ou ce navigateur."));
+    return;
+  }
+  navigator.serviceWorker.register("sw.js").catch(() => dire("Impossible de préparer les notifications."));
+
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("rappels-activer").addEventListener("click", async () => {
+      try {
+        const reponse = await Notification.requestPermission();
+        dire(reponse === "granted" ? "Notifications autorisées." : "Notifications refusées : tu peux les autoriser dans les réglages de l'iPhone.");
+      } catch (e) { dire("Impossible de demander l'autorisation ici."); }
+    });
+    document.getElementById("rappels-tester").addEventListener("click", async () => {
+      if (Notification.permission !== "granted") { dire("Autorise d'abord les notifications."); return; }
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification("Differents", { body: "Test : tes notifications fonctionnent.", icon: "icon-192.png" });
+        dire("Test envoyé. Regarde l'écran de ton téléphone.");
+      } catch (e) { dire("Le test n'a pas pu être envoyé."); }
+    });
+  });
+})();
 </script>
 </body>
 </html>
