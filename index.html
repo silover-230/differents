@@ -176,8 +176,6 @@
   /* Corps */
   #corps-svg{touch-action:none;user-select:none;-webkit-user-select:none}
 
-  /* Site : les aides IA sont masquées (elles ne fonctionnent que dans Claude) */
-  .panel:has(#demeler){display:none !important}
   h1.titre-app{
     margin:10px 0 6px;
   }
@@ -317,6 +315,7 @@
 
   async function demarrer() {
     client = window.supabase.createClient(SUPABASE_URL, SUPABASE_CLE);
+    window.sbClient = client;
     const { data } = await client.auth.getSession();
     session = data.session;
     if (!session) { interfaceConnexion(); return; }
@@ -375,11 +374,12 @@
     </p>
 
     <div class="panel p-lav">
-      <h2>Démêler avec Claude</h2>
-      <p class="muted">Claude pose une question à la fois, sans jugement, et ne fait aucun diagnostic. Il ne garde rien d'un appel à l'autre : ce qui compte est enregistré ici.</p>
-      <button id="demeler" type="button">Aide-moi à démêler</button>
+      <h2>Conseils pour aller mieux</h2>
+      <p class="muted">Des pistes courtes, proposées par une IA. Ce ne sont pas des conseils médicaux : tu gardes le dernier mot.</p>
+      <button id="demeler" type="button">Des conseils pour aller mieux</button>
       <div class="card-out" id="out" hidden></div>
     </div>
+
 
     <div class="panel p-lav">
       <h2>Historique</h2>
@@ -658,6 +658,7 @@
   <section data-section="vessie" hidden>
     <div class="rv-head"><button type="button" id="vers-eau-2">← Eau</button><h2 style="margin:0;text-align:right">Vessie</h2></div>
     <div class="panel p-peri" id="vessie-carte"></div>
+    <div class="panel p-sun" id="vessie-prevision"></div>
     <div class="panel p-lav" id="vessie-bilan" hidden>
       <h2>Bilan de la journée</h2>
       <p id="vessie-bilan-texte" style="margin:0"></p>
@@ -777,6 +778,16 @@ function pressOnly(parent, b) {
   parent.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", "false"));
   b.setAttribute("aria-pressed", "true");
 }
+/* Un deuxième appui sur un choix déjà sélectionné l'annule */
+function choisirOuAnnuler(parent, b, surChoix, surAnnulation) {
+  if (b.getAttribute("aria-pressed") === "true") {
+    b.setAttribute("aria-pressed", "false");
+    surAnnulation();
+  } else {
+    pressOnly(parent, b);
+    surChoix();
+  }
+}
 function chipGroup(parent, items, set) {
   items.forEach(r => {
     const label = document.createElement("label");
@@ -841,19 +852,18 @@ function showMots(niveau) {
   state.mot = null;
   const entry = RESSENTI.find(r => r[0] === niveau);
   if (!entry) return;
-  entry[1].forEach(m => btn(m, motsEl, b => { pressOnly(motsEl, b); state.mot = m; }));
+  entry[1].forEach(m => btn(m, motsEl, b => choisirOuAnnuler(motsEl, b, () => { state.mot = m; }, () => { state.mot = null; })));
 }
-RESSENTI.forEach(([niveau]) => btn(niveau, ressentiEl, b => {
-  pressOnly(ressentiEl, b);
-  state.ressenti = niveau;
-  showMots(niveau);
-}));
+RESSENTI.forEach(([niveau]) => btn(niveau, ressentiEl, b => choisirOuAnnuler(ressentiEl, b,
+  () => { state.ressenti = niveau; showMots(niveau); },
+  () => { state.ressenti = null; state.mot = null; document.getElementById("mots").innerHTML = ""; }
+)));
 
 const batEl = document.getElementById("batterie");
-BATTERIE.forEach(([label, pct]) => btn(label + " (" + pct + " %)", batEl, b => {
-  pressOnly(batEl, b);
-  state.batterie = { label, pct };
-}));
+BATTERIE.forEach(([label, pct]) => btn(label + " (" + pct + " %)", batEl, b => choisirOuAnnuler(batEl, b,
+  () => { state.batterie = { label, pct }; },
+  () => { state.batterie = null; }
+)));
 
 chipGroup(document.getElementById("raisons"), RAISONS, state.raisons);
 
@@ -901,40 +911,31 @@ document.getElementById("save").addEventListener("click", () => {
 
 document.getElementById("demeler").addEventListener("click", async () => {
   const out = document.getElementById("out");
-  const demelerBtn = document.getElementById("demeler");
+  const bouton = document.getElementById("demeler");
   out.hidden = false;
-  if (!sampleFn) { out.textContent = "Cette fonction n'est pas disponible ici."; return; }
-  const snapshot = {
+  if (!window.sbClient) { out.textContent = "Connecte-toi d'abord pour obtenir des conseils."; return; }
+  const donnees = {
     ressenti: state.ressenti, mot: state.mot,
     batterie: state.batterie ? state.batterie.label + " (" + state.batterie.pct + " %)" : null,
     raisons: [...state.raisons],
     autre: document.getElementById("autre").value.trim()
   };
-  const prompt =
-    "Tu accompagnes une personne neuroatypique qui veut mieux comprendre ce qu'elle ressent. " +
-    "Réponds en français, de façon douce et brève. Pose une seule question à la fois. " +
-    "Propose au plus deux pistes, formulées comme des possibilités (émotion ou besoin), et demande ce qui colle. " +
-    "Ne pose aucun diagnostic. Données du check-in actuel : " + JSON.stringify(snapshot);
-  demelerBtn.disabled = true;
-  out.textContent = "Réflexion…";
+  bouton.disabled = true;
+  out.textContent = "Je réfléchis…";
   try {
-    await sampleFn(prompt, {
-      cache: false,
-      modelTier: "quick",
-      onText: ({ text }) => { out.textContent = text; }
-    });
+    const { data, error } = await window.sbClient.functions.invoke("conseils", { body: donnees });
+    if (error) throw error;
+    out.textContent = (data && data.conseils) || "Pas de conseil pour l'instant.";
   } catch (e) {
-    if (e && e.code === "not_granted") { sampleFn = null; out.textContent = "Accès refusé."; }
-    else if (e && e.code === "rate_limited") { out.textContent = "Trop de demandes pour l'instant, réessaie dans un moment."; }
-    else { out.textContent = e && e.text ? e.text : "Claude n'a pas pu répondre."; }
+    out.textContent = "Les conseils ne sont pas disponibles pour le moment. Réessaie plus tard.";
   } finally {
-    demelerBtn.disabled = false;
+    bouton.disabled = false;
   }
 });
 
 /* ---------- Sommeil ---------- */
 const recupEl = document.getElementById("recup");
-RECUP.forEach(r => btn(r, recupEl, b => { pressOnly(recupEl, b); state.recup = r; }));
+RECUP.forEach(r => btn(r, recupEl, b => choisirOuAnnuler(recupEl, b, () => { state.recup = r; }, () => { state.recup = null; })));
 chipGroup(document.getElementById("sensations"), SENSATIONS, state.sensations);
 
 const reveilsList = document.getElementById("reveils-list");
@@ -2263,7 +2264,54 @@ function afficherEtapeVessie() {
   }
 }
 
+/* Prévision simple : médiane des intervalles entre passages (calcul, pas d'IA) */
+const JOURS_AVANT_PREVISION = 30;
+const PASSAGES_MIN_PREVISION = 20;
+function renderPrevisionVessie() {
+  const el = document.getElementById("vessie-prevision");
+  if (!el) return;
+  el.innerHTML = "";
+  const h = document.createElement("h2");
+  h.textContent = "Prévision";
+  const p = document.createElement("p");
+  p.style.margin = "0";
+  el.append(h, p);
+  const l = loadKey(KEY_VESSIE).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+  if (l.length < PASSAGES_MIN_PREVISION) {
+    p.textContent = "Pas encore de prévision : il faut au moins " + PASSAGES_MIN_PREVISION + " passages notés (il en manque " + (PASSAGES_MIN_PREVISION - l.length) + ").";
+    return;
+  }
+  const jours = (Date.now() - new Date(l[0].date)) / 86400000;
+  if (jours < JOURS_AVANT_PREVISION) {
+    p.textContent = "Encore " + Math.ceil(JOURS_AVANT_PREVISION - jours) + " jour(s) de données avant la première prévision.";
+    return;
+  }
+  const recents = l.slice(-30);
+  const ecarts = [];
+  for (let i = 1; i < recents.length; i++) {
+    ecarts.push((new Date(recents[i].date) - new Date(recents[i - 1].date)) / 60000);
+  }
+  // On ignore les écarts de plus de 8 h (nuits) : ce ne sont pas des envies de la journée
+  const diurnes = ecarts.filter(m => m > 0 && m <= 8 * 60).sort((a, b) => a - b);
+  if (diurnes.length < 5) {
+    p.textContent = "Pas assez d'intervalles réguliers pour une prévision.";
+    return;
+  }
+  const mediane = diurnes[Math.floor(diurnes.length / 2)];
+  const dernier = new Date(l[l.length - 1].date);
+  const prochain = new Date(dernier.getTime() + mediane * 60000);
+  const heure = prochain.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  p.textContent = prochain > new Date()
+    ? "Prochaine envie probable vers " + heure + " (intervalle médian de tes passages : " + Math.round(mediane) + " min)."
+    : "Une envie est probablement proche : ton intervalle habituel est dépassé.";
+  const note = document.createElement("p");
+  note.className = "muted";
+  note.style.margin = "6px 0 0";
+  note.textContent = "Calcul simple sur tes derniers passages. Ce n'est pas un diagnostic.";
+  el.appendChild(note);
+}
 function renderSemaineVessie() {
+  renderPrevisionVessie();
   const debut = lundiDe(new Date());
   debut.setDate(debut.getDate() + vessieDecalage * 7);
   const fin = new Date(debut);
