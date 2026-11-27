@@ -641,6 +641,7 @@
       <p class="muted" style="margin:10px 0 6px">Signes associés</p>
       <div class="opts" id="q-signes"></div>
       <p class="muted" id="q-alerte" hidden style="margin-top:10px"></p>
+      <div id="analyse-corps" class="muted" style="margin-top:10px;line-height:1.5"></div>
     </div>
     <div class="panel p-lav">
       <h2>Historique</h2>
@@ -1831,6 +1832,49 @@ btn("De face", vueEl, b => { pressOnly(vueEl, b); vueCorps = "devant"; dessinerC
 btn("De dos", vueEl, b => { pressOnly(vueEl, b); vueCorps = "dos"; dessinerCorps(); renderResumeCorps(); });
 pressOnly(vueEl, vueEl.querySelector("button"));
 
+// Analyse calculée (sans IA) à partir des réponses du bilan. Ce n'est pas un diagnostic.
+function analyserDouleur(e) {
+  const phrases = [];
+  const s = e.signes || [];
+  const zones = [...new Set((e.points || []).map(p => p.zone).filter(z => z && z !== "zone sans repère"))];
+  if (zones.length) phrases.push("Tu as situé la douleur près de " + zones.join(" et ") + ".");
+
+  const profond = (e.profondeur || "").startsWith("En profondeur");
+  if (profond) phrases.push("Une douleur ressentie en profondeur peut venir d'un organe ou d'une zone située sous la peau, plutôt que d'un muscle ou de la peau.");
+  else if ((e.profondeur || "").startsWith("En surface")) phrases.push("Une douleur en surface vient souvent de la peau ou des muscles, par exemple après un effort ou une mauvaise position.");
+  if (profond && e.vue === "dos" && zones.some(z => /bas du dos|lomb|rein/i.test(z))) {
+    phrases.push("Une douleur profonde dans le bas du dos peut parfois venir des reins, mais seul un médecin peut le vérifier.");
+  }
+
+  if (e.intensite !== null && e.intensite !== undefined) {
+    const i = e.intensite;
+    const niveau = i >= 8 ? "forte" : i >= 4 ? "modérée" : "légère";
+    phrases.push("Elle est notée " + i + " sur 10, ce qui correspond à une douleur " + niveau + ".");
+  }
+
+  if (s.includes("Fièvre")) phrases.push("La fièvre associée à la douleur demande un avis médical rapidement.");
+  if (s.includes("Gonflement") || s.includes("Rougeur") || s.includes("Chaleur")) {
+    phrases.push("Un gonflement, une rougeur ou une chaleur à cet endroit peut signaler une inflammation : mieux vaut consulter rapidement.");
+  }
+  if (s.includes("Engourdissement") || s.includes("Fourmillements")) {
+    phrases.push("Un engourdissement ou des fourmillements qui persistent méritent un avis médical.");
+  }
+
+  if (e.duree === "Plus de 3 mois") phrases.push("Une douleur qui dure depuis plus de 3 mois mérite d'être examinée par un médecin.");
+  else if (e.duree === "Moins d'une semaine") phrases.push("Une douleur récente est souvent passagère, mais reste à surveiller.");
+
+  if (e.frequence === "Après un effort ou une position") phrases.push("Elle revient surtout après un effort ou une position, ce qui oriente plutôt vers une cause mécanique.");
+  else if (e.frequence === "Tout le temps") phrases.push("Une douleur présente tout le temps mérite d'être vue par un médecin si elle ne passe pas.");
+
+  if (e.impact === "Beaucoup") phrases.push("Elle gêne beaucoup le sommeil ou les activités.");
+
+  const alerte = (e.intensite >= 8) || s.includes("Fièvre") || s.includes("Gonflement") || s.includes("Rougeur");
+  if (alerte) phrases.push("Ces réponses demandent un avis médical rapidement.");
+
+  phrases.push("Ce n'est qu'une indication calculée à partir de tes réponses, pas un diagnostic : seul un médecin peut dire d'où vient la douleur.");
+  return phrases.join(" ");
+}
+
 document.getElementById("corps-save").addEventListener("click", () => {
   const msg = document.getElementById("msg-corps");
   const visibles = pts.filter(p => p.vue === vueCorps);
@@ -1841,6 +1885,8 @@ document.getElementById("corps-save").addEventListener("click", () => {
     vue: vueCorps,
     points: visibles.map(p => ({ zone: repereProche(p.x, p.y), niveau: NIVEAUX[p.niveau].nom, x: p.x, y: p.y }))
   };
+  entry.analyse = analyserDouleur(entry);
+  document.getElementById("analyse-corps").textContent = entry.analyse;
   const list = loadKey(KEY_CORPS);
   list.push(entry);
   msg.textContent = persistKey(KEY_CORPS, list) ? "Point enregistré." : "Impossible d'enregistrer ici.";
@@ -1990,6 +2036,11 @@ function depuis(list) {
   const limite = Date.now() - periodeJours * 86400000;
   return list.filter(e => new Date(e.date).getTime() >= limite);
 }
+// Phrase à partir d'un comptage : "debut" + les plus fréquents, ou "" si rien
+function phraseTop(m, n, debut) {
+  const t = Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => k + " (" + v + " fois)");
+  return t.length ? debut + t.join(", ") + "." : "";
+}
 function compte(arr) { const m = {}; arr.forEach(v => { if (v) m[v] = (m[v] || 0) + 1; }); return m; }
 function topTxt(m, n) {
   const t = Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => k + " (" + v + "×)");
@@ -2012,28 +2063,27 @@ function renderBilan() {
   const emo = depuis(loadKey(KEY));
   const son = depuis(loadKey(KEY_SLEEP));
   const emoL = [
-    emo.length + " entrée(s) d'émotions",
-    "Ressenti : " + topTxt(compte(emo.map(e => e.ressenti)), 5),
-    "Batterie sociale : " + topTxt(compte(emo.map(e => e.batterie && e.batterie.label)), 5),
-    "Raisons les plus citées : " + topTxt(compte(emo.flatMap(e => e.raisons)), 5),
-    "Mots les plus choisis : " + topTxt(compte(emo.map(e => e.mot)), 3)
-  ];
+    emo.length ? "Tu as noté tes émotions " + emo.length + " fois sur la période." : "Aucune émotion notée sur la période.",
+    phraseTop(compte(emo.map(e => e.ressenti)), 5, "Le ressenti qui revient le plus souvent : "),
+    phraseTop(compte(emo.map(e => e.batterie && e.batterie.label)), 5, "Ta batterie sociale est surtout : "),
+    phraseTop(compte(emo.flatMap(e => e.raisons)), 5, "Les raisons les plus citées sont : "),
+    phraseTop(compte(emo.map(e => e.mot)), 3, "Les mots que tu choisis le plus souvent : ")
+  ].filter(Boolean);
   const estime = son.map(e => Math.max(0, e.dureeMin - e.latence - e.reveils.reduce((s, r) => s + r.duree, 0)));
   const moyReveils = moyenne(son.map(e => e.reveils.length));
   const moyLatence = moyenne(son.map(e => e.latence));
   const sonL = [
-    son.length + " nuit(s) notée(s)",
-    "Durée au lit moyenne : " + fmtMoy(moyenne(son.map(e => e.dureeMin))),
-    "Sommeil estimé moyen : " + fmtMoy(moyenne(estime)),
-    "Temps moyen pour s'endormir : " + (moyLatence === null ? "–" : Math.round(moyLatence) + " min"),
-    "Réveils par nuit en moyenne : " + (moyReveils === null ? "–" : moyReveils.toFixed(1)),
-    "Récupération : " + topTxt(compte(son.map(e => e.recup)), 5)
-  ];
+    son.length ? "Tu as noté " + son.length + " nuit(s) sur la période." : "Aucune nuit notée sur la période.",
+    son.length ? "Tu restes au lit en moyenne " + fmtMoy(moyenne(son.map(e => e.dureeMin))) + ", dont environ " + fmtMoy(moyenne(estime)) + " de sommeil estimé." : "",
+    moyLatence !== null ? "Il te faut en moyenne " + Math.round(moyLatence) + " min pour t'endormir." : "",
+    moyReveils !== null ? "Tu te réveilles en moyenne " + moyReveils.toFixed(1) + " fois par nuit." : "",
+    phraseTop(compte(son.map(e => e.recup)), 5, "Ta récupération est surtout : ")
+  ].filter(Boolean);
   fill("bilan-emo", emoL);
   fill("bilan-sommeil", sonL);
   document.getElementById("bilan-texte").value =
-    "Bilan — " + periodeLabel + "\n\nÉMOTIONS\n- " + emoL.join("\n- ") +
-    "\n\nSOMMEIL\n- " + sonL.join("\n- ") +
+    "Bilan — " + periodeLabel + "\n\nÉmotions. " + emoL.join(" ") +
+    "\n\nSommeil. " + sonL.join(" ") +
     bilanAutresTexte() + "\n\nCe bilan résume des notes personnelles. Il ne pose aucun diagnostic.";
 }
 document.getElementById("copier").addEventListener("click", async () => {
@@ -2651,22 +2701,22 @@ renderSleepHistN();
 /* Bilan : corps, eau, vessie */
 function bilanAutresTexte() {
   try {
-    const bloc = (titre, lignes) => "\n\n" + titre + "\n- " + lignes.join("\n- ");
+    const bloc = (titre, lignes) => "\n\n" + titre + ". " + lignes.join(" ");
     const douleurs = depuis(loadKey(KEY_DOULEUR));
     const points = depuis(loadKey(KEY_CORPS));
     const intensites = douleurs.map(e => e.intensite).filter(v => typeof v === "number");
     const moyIntensite = moyenne(intensites);
     const corpsL = [
-      douleurs.length + " réponse(s) sur la douleur",
-      "Types : " + topTxt(compte(douleurs.map(e => e.type)), 5),
-      "Surface ou profondeur : " + topTxt(compte(douleurs.map(e => e.profondeur)), 3),
-      "Depuis combien de temps : " + topTxt(compte(douleurs.map(e => e.duree)), 3),
-      "Fréquence : " + topTxt(compte(douleurs.map(e => e.frequence)), 3),
-      "Intensité moyenne : " + (moyIntensite === null ? "–" : moyIntensite.toFixed(1) + " / 10"),
-      "Signes associés : " + topTxt(compte(douleurs.flatMap(e => e.signes || [])), 5),
-      "Points posés sur le corps : " + points.length + " enregistrement(s)",
-      "Zones les plus citées : " + topTxt(compte(points.flatMap(e => (e.points || e.zones || []).map(p => p.zone))), 5)
-    ];
+      douleurs.length ? "Tu as répondu " + douleurs.length + " fois au bilan sur la douleur." : "Aucune réponse sur la douleur sur la période.",
+      phraseTop(compte(douleurs.map(e => e.type)), 5, "Les types de douleur choisis sont : "),
+      phraseTop(compte(douleurs.map(e => e.profondeur)), 3, "Tu la décris surtout comme : "),
+      phraseTop(compte(douleurs.map(e => e.duree)), 3, "Elle dure le plus souvent depuis : "),
+      phraseTop(compte(douleurs.map(e => e.frequence)), 3, "Elle revient surtout : "),
+      moyIntensite !== null ? "Son intensité moyenne est de " + moyIntensite.toFixed(1) + " sur 10." : "",
+      phraseTop(compte(douleurs.flatMap(e => e.signes || [])), 5, "Les signes associés le plus souvent sont : "),
+      points.length ? "Tu as enregistré " + points.length + " point(s) sur le corps." : "",
+      phraseTop(compte(points.flatMap(e => (e.points || e.zones || []).map(p => p.zone))), 5, "Les zones les plus citées sont : ")
+    ].filter(Boolean);
     const eau = depuis(loadKey(KEY_EAU));
     const parJour = {};
     eau.forEach(e => { const j = new Date(e.date).toDateString(); parJour[j] = (parJour[j] || 0) + e.ml; });
@@ -2676,21 +2726,22 @@ function bilanAutresTexte() {
     const nbValidees = validees.filter(j => jours.includes(j)).length;
     const moyEau = jours.length ? Math.round(jours.reduce((s, j) => s + parJour[j], 0) / jours.length) : null;
     const eauL = [
-      jours.length + " jour(s) noté(s)",
-      "Total moyen par jour : " + (moyEau === null ? "–" : formatMl(moyEau)),
-      "Objectif validé : " + nbValidees + " jour(s)",
-      "Repère choisi : " + formatMl(eauConf.objectif)
-    ];
+      jours.length ? "Tu as noté de l'eau sur " + jours.length + " jour(s)." : "Aucune eau notée sur la période.",
+      moyEau !== null ? "Tu bois en moyenne " + formatMl(moyEau) + " par jour." : "",
+      "Tu as validé ton objectif " + nbValidees + " jour(s).",
+      "Ton repère est de " + formatMl(eauConf.objectif) + "."
+    ].filter(Boolean);
     const vessie = depuis(loadKey(KEY_VESSIE));
     const infos = vessie.map(infoVessie);
     const nbJours = new Set(vessie.map(e => new Date(e.date).toDateString())).size;
+    const nbUrgentes = infos.filter(x => x.urgente).length;
+    const nbDouleur = infos.filter(x => x.douleur).length;
     const vessieL = [
-      infos.length + " passage(s) noté(s)",
-      "Jours avec passages : " + nbJours,
-      "Moyenne par jour : " + (nbJours ? (infos.length / nbJours).toFixed(1) : "–"),
-      "Envies très urgentes : " + infos.filter(x => x.urgente).length,
-      "Avec douleur en urinant : " + infos.filter(x => x.douleur).length
-    ];
+      infos.length ? "Tu as noté " + infos.length + " passage(s) aux toilettes, répartis sur " + nbJours + " jour(s)." : "Aucun passage noté sur la période.",
+      nbJours ? "Cela fait en moyenne " + (infos.length / nbJours).toFixed(1) + " passage(s) par jour." : "",
+      nbUrgentes ? "Tu as noté " + nbUrgentes + " envie(s) très urgente(s)." : "",
+      nbDouleur ? "Tu as noté une douleur en urinant " + nbDouleur + " fois : parle-en à un médecin rapidement." : ""
+    ].filter(Boolean);
     fill("bilan-corps", corpsL);
     fill("bilan-eau", eauL);
     fill("bilan-vessie", vessieL);
