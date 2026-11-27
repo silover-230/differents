@@ -6,7 +6,7 @@
 <title>Differents</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#C936AE">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Differents">
@@ -185,6 +185,166 @@
     *,*::before,*::after{animation:none !important;transition:none !important}
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== Synchronisation Supabase (ajout) ===== */
+(function () {
+  const SUPABASE_URL = "https://jwrgbjflioysmttcgudf.supabase.co";
+  const SUPABASE_CLE = "sb_publishable_v52joOn5zmgYV3bBkunY1g_7rYqDDa-";
+  const SUFFIXE = "-beta";
+  const FILE = "sync-file-attente";
+  const RECHARGE = "sync-recharge-faite";
+
+  const lireBrut = Storage.prototype.getItem;
+  const ecrireBrut = Storage.prototype.setItem;
+  const effacerBrut = Storage.prototype.removeItem;
+
+  let client = null, session = null;
+
+  function estSync(k) { return typeof k === "string" && k.endsWith(SUFFIXE) && k !== FILE; }
+  function file() { try { return JSON.parse(lireBrut.call(localStorage, FILE) || "{}"); } catch (e) { return {}; } }
+  function sauverFile(f) { ecrireBrut.call(localStorage, FILE, JSON.stringify(f)); }
+
+  // Chaque écriture locale est aussi mise en file d'attente pour le cloud
+  Storage.prototype.setItem = function (k, v) {
+    ecrireBrut.call(this, k, v);
+    if (this === localStorage && estSync(k)) {
+      const f = file(); f[k] = { op: "set", v: String(v) }; sauverFile(f); envoyer();
+    }
+  };
+  Storage.prototype.removeItem = function (k) {
+    effacerBrut.call(this, k);
+    if (this === localStorage && estSync(k)) {
+      const f = file(); f[k] = { op: "del" }; sauverFile(f); envoyer();
+    }
+  };
+
+  async function envoyer() {
+    if (!client || !session) return;
+    const f = file();
+    const cles = Object.keys(f);
+    if (!cles.length) return;
+    try {
+      const sets = cles.filter(k => f[k].op === "set")
+        .map(k => ({ user_id: session.user.id, cle: k, valeur: f[k].v, maj: new Date().toISOString() }));
+      if (sets.length) {
+        const { error } = await client.from("donnees").upsert(sets, { onConflict: "user_id,cle" });
+        if (error) throw error;
+      }
+      for (const k of cles.filter(k => f[k].op === "del")) {
+        const { error } = await client.from("donnees").delete().eq("cle", k);
+        if (error) throw error;
+      }
+      const f2 = file();
+      cles.forEach(k => { if (f2[k] && f2[k].op === f[k].op && f2[k].v === f[k].v) delete f2[k]; });
+      sauverFile(f2);
+      majStatut("Synchronisée");
+    } catch (e) {
+      console.warn("Synchro en attente :", e);
+      majStatut("Hors ligne : sera envoyée plus tard");
+    }
+  }
+
+  // Récupère les données du cloud dans le téléphone ou le PC
+  async function tirer() {
+    const { data, error } = await client.from("donnees").select("cle,valeur");
+    if (error) throw error;
+    const cloud = new Map(data.map(r => [r.cle, r.valeur]));
+    const f = file();
+    let change = false;
+    cloud.forEach((v, k) => {
+      if (f[k]) return; // une modification locale non envoyée prime
+      if (lireBrut.call(localStorage, k) !== v) { ecrireBrut.call(localStorage, k, v); change = true; }
+    });
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (estSync(k) && !cloud.has(k)) f[k] = { op: "set", v: lireBrut.call(localStorage, k) };
+    }
+    sauverFile(f);
+    return change;
+  }
+
+  let statut = null;
+  function majStatut(txt) { if (statut) statut.textContent = txt; }
+
+  function interfaceConnexion() {
+    const d = document.createElement("div");
+    d.id = "sync-connexion";
+    d.style.cssText = "position:fixed;inset:0;z-index:99999;background:#fbf7f2;display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,sans-serif";
+    d.innerHTML = `
+      <form id="sync-form" style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px">
+        <h2 style="margin:0;font-size:22px">Connexion</h2>
+        <p style="margin:0;font-size:14px;color:#555">Connecte-toi pour retrouver tes données sur tous tes appareils.</p>
+        <input id="sync-mail" type="email" placeholder="Adresse mail" required style="padding:12px;font-size:16px;border:1px solid #bbb;border-radius:8px">
+        <input id="sync-mdp" type="password" placeholder="Mot de passe (6 caractères minimum)" required minlength="6" style="padding:12px;font-size:16px;border:1px solid #bbb;border-radius:8px">
+        <button id="sync-entrer" type="submit" style="padding:12px;font-size:16px;border:0;border-radius:8px;background:#7a3b2e;color:#fff">Se connecter</button>
+        <button id="sync-creer" type="button" style="padding:12px;font-size:15px;border:1px solid #7a3b2e;border-radius:8px;background:#fff;color:#7a3b2e">Créer un compte</button>
+        <p id="sync-msg" style="margin:0;font-size:14px;color:#a00;min-height:18px"></p>
+      </form>`;
+    document.body.appendChild(d);
+    const msg = d.querySelector("#sync-msg");
+    const mail = () => d.querySelector("#sync-mail").value.trim();
+    const mdp = () => d.querySelector("#sync-mdp").value;
+
+    d.querySelector("#sync-form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      msg.textContent = "Connexion…";
+      const { error } = await client.auth.signInWithPassword({ email: mail(), password: mdp() });
+      if (error) { msg.textContent = "Connexion impossible : vérifie l'adresse et le mot de passe."; return; }
+      location.reload();
+    });
+    d.querySelector("#sync-creer").addEventListener("click", async () => {
+      if (!mail() || mdp().length < 6) { msg.textContent = "Mets une adresse mail et un mot de passe de 6 caractères minimum."; return; }
+      msg.textContent = "Création du compte…";
+      const { data, error } = await client.auth.signUp({ email: mail(), password: mdp() });
+      if (error) { msg.textContent = "Création impossible : " + error.message; return; }
+      if (data.session) { location.reload(); }
+      else { msg.style.color = "#333"; msg.textContent = "Compte créé. Confirme ton adresse mail (regarde tes mails), puis connecte-toi."; }
+    });
+  }
+
+  function boutonDeconnexion() {
+    const b = document.createElement("button");
+    b.textContent = "Se déconnecter";
+    b.style.cssText = "position:fixed;right:10px;bottom:10px;z-index:9999;font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid #999;background:#fff;color:#333";
+    b.addEventListener("click", async () => { await client.auth.signOut(); location.reload(); });
+    document.body.appendChild(b);
+    statut = document.createElement("span");
+    statut.style.cssText = "position:fixed;left:10px;bottom:10px;z-index:9999;font-size:12px;color:#555;background:#fff;padding:4px 8px;border-radius:6px";
+    statut.textContent = "Synchronisation…";
+    document.body.appendChild(statut);
+  }
+
+  async function demarrer() {
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_CLE);
+    const { data } = await client.auth.getSession();
+    session = data.session;
+    if (!session) { interfaceConnexion(); return; }
+    boutonDeconnexion();
+    try {
+      const change = await tirer();
+      await envoyer();
+      if (change && !sessionStorage.getItem(RECHARGE)) {
+        sessionStorage.setItem(RECHARGE, "1");
+        location.reload();
+        return;
+      }
+      sessionStorage.removeItem(RECHARGE);
+      majStatut("Synchronisée");
+    } catch (e) {
+      console.warn("Synchro impossible pour l'instant :", e);
+      majStatut("Hors ligne : sera synchronisée plus tard");
+    }
+  }
+
+  window.addEventListener("online", () => { envoyer(); });
+  window.addEventListener("DOMContentLoaded", () => {
+    if (window.supabase) demarrer();
+    else console.warn("Bibliothèque Supabase non chargée");
+  });
+})();
+</script>
+
 </head>
 <body>
 <main>
