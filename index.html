@@ -923,7 +923,9 @@ document.getElementById("demeler").addEventListener("click", async () => {
   const out = document.getElementById("out");
   const bouton = document.getElementById("demeler");
   out.hidden = false;
-  if (!window.sbClient) { out.textContent = "Connecte-toi d'abord pour obtenir des conseils."; return; }
+  if (!window.sbClient) { out.textContent = "Diagnostic : le client Supabase n'est pas chargé."; return; }
+  const { data: sess } = await window.sbClient.auth.getSession();
+  if (!sess || !sess.session) { out.textContent = "Diagnostic : tu n'es pas connectée à ton compte sur cet appareil."; return; }
   const donnees = {
     ressenti: state.ressenti, mot: state.mot,
     batterie: state.batterie ? state.batterie.label + " (" + state.batterie.pct + " %)" : null,
@@ -937,7 +939,9 @@ document.getElementById("demeler").addEventListener("click", async () => {
     if (error) throw error;
     out.textContent = (data && data.conseils) || "Pas de conseil pour l'instant.";
   } catch (e) {
-    out.textContent = "Les conseils ne sont pas disponibles pour le moment. Réessaie plus tard.";
+    let detail = (e && e.message) ? e.message : String(e);
+    try { if (e && e.context && typeof e.context.text === "function") detail += " | " + (await e.context.text()); } catch (x) {}
+    out.textContent = "Diagnostic : " + detail;
   } finally {
     bouton.disabled = false;
   }
